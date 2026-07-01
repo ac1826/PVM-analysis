@@ -275,8 +275,6 @@
       </div>
     </div>
 
-    <div id="scope" class="scope-note"></div>
-    <div id="insightCards" class="insights"></div>
     <div id="factoryCards" class="factory-strip"></div>
 
     <section class="grid-2">
@@ -310,6 +308,23 @@
           <span class="panel-note">越靠下越需要关注出成效率</span>
         </div>
         <div id="categorySaleRateChart" class="chart tall"></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>品类单价箱线图</h2>
+          <span class="panel-note">看各厂品类价格离散程度</span>
+        </div>
+        <div id="priceBoxplotChart" class="chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>工厂品类结构树图</h2>
+          <span class="panel-note">面积代表含税金额贡献</span>
+        </div>
+        <div id="categoryTreemapChart" class="chart"></div>
       </div>
     </section>
 
@@ -417,14 +432,13 @@
         document.querySelector(".wrap").innerHTML += '<div class="empty">还没有同步日报数据。</div>';
         return;
       }
-      document.getElementById("scope").textContent =
-        `数据日期：${report.report_date}；生成时间：${report.generated_at || "-"}；当前共 ${report.factory_count || 0} 个厂。`;
-      renderInsights();
       renderFactoryCards();
       renderFactoryMetricChart();
       renderVolumeSalesChart();
       renderCategoryAmountChart();
       renderCategorySaleRateChart();
+      renderPriceBoxplotChart();
+      renderCategoryTreemapChart();
       renderTrendChart();
       renderSkuRankChart();
     }
@@ -435,40 +449,6 @@
 
     function factoryPrice(factory) {
       return num((factory.daily_core || {})["总产值"]);
-    }
-
-    function allOverviewRows() {
-      return (report.factories || []).flatMap(factory =>
-        (factory.overview || []).map(row => ({ ...row, factory: factory.factory }))
-      );
-    }
-
-    function renderInsights() {
-      const factories = report.factories || [];
-      const lowestYield = factories.slice().sort((a, b) => factoryYield(a) - factoryYield(b))[0];
-      const bestYield = factories.slice().sort((a, b) => factoryYield(b) - factoryYield(a))[0];
-      const bestPrice = factories.slice().sort((a, b) => factoryPrice(b) - factoryPrice(a))[0];
-      const overviewRows = allOverviewRows();
-      const topCategory = overviewRows.slice().sort((a, b) => num(b["含税金额"]) - num(a["含税金额"]))[0];
-      const riskClass = lowestYield && factoryYield(lowestYield) < 94 ? "risk" : "";
-
-      document.getElementById("insightCards").innerHTML = `
-        <div class="insight ${riskClass}">
-          <div class="eyebrow">产成率关注</div>
-          <div class="headline">${lowestYield ? `${lowestYield.factory} 总产成率 ${pct(factoryYield(lowestYield))}` : "-"}</div>
-          <div class="detail">${bestYield ? `最高为 ${bestYield.factory} ${pct(factoryYield(bestYield))}。优先查看低产成率工厂的品类结构。` : ""}</div>
-        </div>
-        <div class="insight">
-          <div class="eyebrow">单价关注</div>
-          <div class="headline">${bestPrice ? `${bestPrice.factory} 总单价 ${fmt(factoryPrice(bestPrice), " 元/kg")}` : "-"}</div>
-          <div class="detail">${bestPrice ? `主产品 ${fmt(num(bestPrice.daily_core["主产品产值"]), " 元/kg")}，副产品 ${fmt(num(bestPrice.daily_core["副产品产值"]), " 元/kg")}。` : ""}</div>
-        </div>
-        <div class="insight">
-          <div class="eyebrow">品类线索</div>
-          <div class="headline">${topCategory ? `${topCategory.factory} · ${topCategory["项目"]}` : "-"}</div>
-          <div class="detail">${topCategory ? `产成率 ${pct(topCategory["产成率%"])}，含税单价 ${fmt(num(topCategory["含税单价"]), " 元/kg")}。` : ""}</div>
-        </div>
-      `;
     }
 
     function renderFactoryCards() {
@@ -573,6 +553,95 @@
           data: rows.map(r => num(r["产成率%"])),
           label: { show: true, position: "right", formatter: p => pct(p.value) },
           itemStyle: { borderRadius: [0, 6, 6, 0] }
+        }]
+      }, true);
+    }
+
+    function quantile(sorted, q) {
+      if (!sorted.length) return 0;
+      const pos = (sorted.length - 1) * q;
+      const base = Math.floor(pos);
+      const rest = pos - base;
+      const next = sorted[base + 1];
+      return next === undefined ? sorted[base] : sorted[base] + rest * (next - sorted[base]);
+    }
+
+    function boxData(values) {
+      const sorted = values.map(num).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+      if (!sorted.length) return [0, 0, 0, 0, 0];
+      return [
+        sorted[0],
+        quantile(sorted, 0.25),
+        quantile(sorted, 0.5),
+        quantile(sorted, 0.75),
+        sorted[sorted.length - 1]
+      ];
+    }
+
+    function renderPriceBoxplotChart() {
+      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
+      const names = factories.map(f => f.factory);
+      const data = factories.map(factory => boxData((factory.overview || []).map(row => row["含税单价"])));
+      initChart("priceBoxplotChart").setOption({
+        color: [COLORS[0]],
+        tooltip: {
+          trigger: "item",
+          formatter: params => {
+            const d = params.data || [];
+            return `${params.name}<br>最低：${fmt(d[0], " 元/kg")}<br>Q1：${fmt(d[1], " 元/kg")}<br>中位：${fmt(d[2], " 元/kg")}<br>Q3：${fmt(d[3], " 元/kg")}<br>最高：${fmt(d[4], " 元/kg")}`;
+          }
+        },
+        grid: { left: 54, right: 26, top: 32, bottom: 42 },
+        xAxis: { type: "category", data: names, axisTick: { show: false } },
+        yAxis: { type: "value", name: "元/kg", scale: true },
+        series: [{
+          name: "品类含税单价",
+          type: "boxplot",
+          data,
+          itemStyle: { borderColor: COLORS[0] }
+        }]
+      }, true);
+    }
+
+    function renderCategoryTreemapChart() {
+      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
+      const data = factories.map(factory => ({
+        name: factory.factory,
+        children: ((factory.sku || {}).by_category || [])
+          .filter(row => num(row["含税金额"]) > 0)
+          .slice(0, 16)
+          .map(row => ({
+            name: row["部位大类"],
+            value: num(row["含税金额"]),
+            itemStyle: { borderColor: "#fff" }
+          }))
+      }));
+      initChart("categoryTreemapChart").setOption({
+        color: COLORS,
+        tooltip: {
+          formatter: info => `${info.name}<br>含税金额：${fmt(num(info.value), " 元")}`
+        },
+        series: [{
+          type: "treemap",
+          roam: false,
+          nodeClick: false,
+          breadcrumb: { show: false },
+          data,
+          label: {
+            show: true,
+            formatter: "{b}",
+            fontSize: 13
+          },
+          upperLabel: {
+            show: true,
+            height: 24,
+            color: "#122033",
+            fontWeight: 700
+          },
+          levels: [
+            { itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 } },
+            { itemStyle: { borderColor: "#fff", borderWidth: 2, gapWidth: 2 } }
+          ]
         }]
       }, true);
     }
