@@ -260,7 +260,7 @@
     <header>
       <div>
         <h1>PVM 三厂日报驾驶舱</h1>
-        <div class="sub">先看异常与结论，再看产销、品类、价格和 SKU 贡献。</div>
+        <div class="sub">先看产成率和单价，再看品类结构、价格趋势和 SKU 贡献。</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="resetFilters()">重置筛选</button>
@@ -298,7 +298,6 @@
     <div id="scope" class="scope-note"></div>
     <div id="insightCards" class="insights"></div>
     <div id="kpiCards" class="kpis"></div>
-    <div id="warningBox"></div>
     <div id="factoryCards" class="factory-strip"></div>
 
     <section class="grid-2">
@@ -311,8 +310,8 @@
       </div>
       <div class="panel">
         <div class="panel-head">
-          <h2>产量与销量匹配</h2>
-          <span class="panel-note">产量高于销量会形成库存压力</span>
+          <h2>产成率与单价匹配</h2>
+          <span class="panel-note">同时看效率和价格质量</span>
         </div>
         <div id="volumeSalesChart" class="chart"></div>
       </div>
@@ -328,8 +327,8 @@
       </div>
       <div class="panel">
         <div class="panel-head">
-          <h2>低产销率品类</h2>
-          <span class="panel-note">越靠下越需要关注消化</span>
+          <h2>低产成率品类</h2>
+          <span class="panel-note">越靠下越需要关注出成效率</span>
         </div>
         <div id="categorySaleRateChart" class="chart tall"></div>
       </div>
@@ -357,10 +356,10 @@
     const METRICS = [
       ["总产成率", "%"],
       ["总产值", " 元/kg"],
-      ["屠宰加工产量", " 吨"],
-      ["销量", " 吨"],
-      ["产销率", "%"],
-      ["均重", " kg/只"]
+      ["主产品产成率", "%"],
+      ["副产品产成率", "%"],
+      ["主产品产值", " 元/kg"],
+      ["副产品产值", " 元/kg"]
     ];
     const COLORS = ["#126c70", "#1258b8", "#b45309", "#047857", "#7c3aed", "#b42318", "#64748b"];
     let report = null;
@@ -430,7 +429,7 @@
       const metricFilter = document.getElementById("metricFilter");
       if (!metricFilter.innerHTML) {
         metricFilter.innerHTML = METRICS.map(([m]) => `<option value="${m}">${m}</option>`).join("");
-        metricFilter.value = "产销率";
+        metricFilter.value = "总产成率";
       }
     }
 
@@ -443,7 +442,6 @@
         `数据日期：${report.report_date}；生成时间：${report.generated_at || "-"}；当前共 ${report.factory_count || 0} 个厂。`;
       renderKpis();
       renderInsights();
-      renderWarnings();
       renderFactoryCards();
       renderFactoryMetricChart();
       renderVolumeSalesChart();
@@ -457,34 +455,37 @@
       const factories = selectedFactory() ? [selectedFactory()] : report.factories;
       const sums = factories.reduce((acc, f) => {
         const c = f.daily_core || {};
-        acc.volume += num(c["屠宰加工产量"]) + num(c["外采加工产量"]);
-        acc.sales += num(c["销量"]);
-        acc.amount += (f.overview || []).reduce((s, r) => s + num(r["含税金额"]), 0);
-        acc.chickens += num(c["宰鸡量"]);
-        acc.weight += num(c["均重"]);
         acc.yield += num(c["总产成率"]);
-        acc.saleRate += num(c["产销率"]);
+        acc.mainYield += num(c["主产品产成率"]);
+        acc.byproductYield += num(c["副产品产成率"]);
+        acc.price += num(c["总产值"]);
+        acc.mainPrice += num(c["主产品产值"]);
+        acc.byproductPrice += num(c["副产品产值"]);
         return acc;
-      }, { volume: 0, sales: 0, amount: 0, chickens: 0, weight: 0, yield: 0, saleRate: 0 });
+      }, { yield: 0, mainYield: 0, byproductYield: 0, price: 0, mainPrice: 0, byproductPrice: 0 });
       const count = Math.max(factories.length, 1);
       const cards = [
-        ["总产量", fmt(sums.volume, " 吨")],
-        ["总销量", fmt(sums.sales, " 吨")],
-        ["含税金额", fmt(sums.amount, " 元")],
-        ["平均产成率", fmt(sums.yield / count, "%")],
-        ["平均产销率", fmt(sums.saleRate / count, "%")],
-        ["宰鸡量", fmt(sums.chickens, " 千只")]
+        ["平均总产成率", fmt(sums.yield / count, "%")],
+        ["主产品产成率", fmt(sums.mainYield / count, "%")],
+        ["副产品产成率", fmt(sums.byproductYield / count, "%")],
+        ["平均总单价", fmt(sums.price / count, " 元/kg")],
+        ["主产品单价", fmt(sums.mainPrice / count, " 元/kg")],
+        ["副产品单价", fmt(sums.byproductPrice / count, " 元/kg")]
       ];
       document.getElementById("kpiCards").innerHTML = cards.map(([label, value], idx) => `
-        <div class="kpi ${idx === 4 && parseFloat(value) < 90 ? "alert" : ""}">
+        <div class="kpi ${idx === 0 && parseFloat(value) < 94 ? "alert" : ""}">
           <div class="label">${label}</div>
           <div class="value">${value}</div>
         </div>
       `).join("");
     }
 
-    function factorySaleRate(factory) {
-      return num((factory.daily_core || {})["产销率"]);
+    function factoryYield(factory) {
+      return num((factory.daily_core || {})["总产成率"]);
+    }
+
+    function factoryPrice(factory) {
+      return num((factory.daily_core || {})["总产值"]);
     }
 
     function allOverviewRows() {
@@ -495,30 +496,28 @@
 
     function renderInsights() {
       const factories = report.factories || [];
-      const lowest = factories.slice().sort((a, b) => factorySaleRate(a) - factorySaleRate(b))[0];
-      const best = factories.slice().sort((a, b) => factorySaleRate(b) - factorySaleRate(a))[0];
+      const lowestYield = factories.slice().sort((a, b) => factoryYield(a) - factoryYield(b))[0];
+      const bestYield = factories.slice().sort((a, b) => factoryYield(b) - factoryYield(a))[0];
+      const bestPrice = factories.slice().sort((a, b) => factoryPrice(b) - factoryPrice(a))[0];
       const overviewRows = allOverviewRows();
       const topCategory = overviewRows.slice().sort((a, b) => num(b["含税金额"]) - num(a["含税金额"]))[0];
-      const topSku = factories.flatMap(factory =>
-        (((factory.sku || {}).top_amount || []).map(row => ({ ...row, factory: factory.factory })))
-      ).sort((a, b) => num(b["含税金额"]) - num(a["含税金额"]))[0];
-      const riskClass = lowest && factorySaleRate(lowest) < 90 ? "risk" : "";
+      const riskClass = lowestYield && factoryYield(lowestYield) < 94 ? "risk" : "";
 
       document.getElementById("insightCards").innerHTML = `
         <div class="insight ${riskClass}">
-          <div class="eyebrow">今日优先关注</div>
-          <div class="headline">${lowest ? `${lowest.factory} 产销率 ${pct(factorySaleRate(lowest))}` : "-"}</div>
-          <div class="detail">${best ? `最高为 ${best.factory} ${pct(factorySaleRate(best))}。低于 90% 的工厂建议优先看产量与销量匹配。` : ""}</div>
+          <div class="eyebrow">产成率关注</div>
+          <div class="headline">${lowestYield ? `${lowestYield.factory} 总产成率 ${pct(factoryYield(lowestYield))}` : "-"}</div>
+          <div class="detail">${bestYield ? `最高为 ${bestYield.factory} ${pct(factoryYield(bestYield))}。优先查看低产成率工厂的品类结构。` : ""}</div>
         </div>
         <div class="insight">
-          <div class="eyebrow">最大品类贡献</div>
+          <div class="eyebrow">单价关注</div>
+          <div class="headline">${bestPrice ? `${bestPrice.factory} 总单价 ${fmt(factoryPrice(bestPrice), " 元/kg")}` : "-"}</div>
+          <div class="detail">${bestPrice ? `主产品 ${fmt(num(bestPrice.daily_core["主产品产值"]), " 元/kg")}，副产品 ${fmt(num(bestPrice.daily_core["副产品产值"]), " 元/kg")}。` : ""}</div>
+        </div>
+        <div class="insight">
+          <div class="eyebrow">重点品类</div>
           <div class="headline">${topCategory ? `${topCategory.factory} · ${topCategory["项目"]}` : "-"}</div>
-          <div class="detail">${topCategory ? `含税金额 ${fmt(num(topCategory["含税金额"]), " 元")}，产销率 ${pct(topCategory["产销率"])}。` : ""}</div>
-        </div>
-        <div class="insight">
-          <div class="eyebrow">最大 SKU 贡献</div>
-          <div class="headline">${topSku ? `${topSku.factory} · ${String(topSku["物料描述"] || topSku["子类"] || "").slice(0, 18)}` : "-"}</div>
-          <div class="detail">${topSku ? `含税金额 ${fmt(num(topSku["含税金额"]), " 元")}，部位 ${topSku["部位大类"] || "-"}。` : ""}</div>
+          <div class="detail">${topCategory ? `产成率 ${pct(topCategory["产成率%"])}，含税单价 ${fmt(num(topCategory["含税单价"]), " 元/kg")}。` : ""}</div>
         </div>
       `;
     }
@@ -526,9 +525,9 @@
     function renderFactoryCards() {
       document.getElementById("factoryCards").innerHTML = (report.factories || []).map(factory => {
         const c = factory.daily_core || {};
-        const saleRate = factorySaleRate(factory);
-        const status = saleRate >= 90 ? "正常" : "需关注";
-        const statusClass = saleRate >= 90 ? "" : "warn";
+        const totalYield = factoryYield(factory);
+        const status = totalYield >= 94 ? "产成率稳定" : "产成率待提升";
+        const statusClass = totalYield >= 94 ? "" : "warn";
         return `
           <div class="factory-card">
             <div class="name">
@@ -536,20 +535,13 @@
               <span class="status-pill ${statusClass}">${status}</span>
             </div>
             <div class="mini-grid">
-              <div class="mini"><div class="label">产销率</div><div class="value">${pct(saleRate)}</div></div>
               <div class="mini"><div class="label">总产成率</div><div class="value">${pct(c["总产成率"])}</div></div>
-              <div class="mini"><div class="label">总产值</div><div class="value">${fmt(c["总产值"], " 元/kg")}</div></div>
+              <div class="mini"><div class="label">主产品产成率</div><div class="value">${pct(c["主产品产成率"])}</div></div>
+              <div class="mini"><div class="label">总单价</div><div class="value">${fmt(c["总产值"], " 元/kg")}</div></div>
             </div>
           </div>
         `;
       }).join("");
-    }
-
-    function renderWarnings() {
-      const warnings = report.warnings || [];
-      document.getElementById("warningBox").innerHTML = warnings.length
-        ? warnings.map(w => `<div class="warn">${escapeHtml(w)}</div>`).join("")
-        : "";
     }
 
     function renderFactoryMetricChart() {
@@ -577,14 +569,17 @@
       const names = report.factories.map(f => f.factory);
       initChart("volumeSalesChart").setOption({
         color: [COLORS[1], COLORS[2]],
-        tooltip: { trigger: "axis", valueFormatter: v => fmt(v, " 吨") },
+        tooltip: { trigger: "axis" },
         legend: { top: 4 },
-        grid: { left: 56, right: 20, top: 50, bottom: 42 },
+        grid: { left: 56, right: 58, top: 50, bottom: 42 },
         xAxis: { type: "category", data: names, axisTick: { show: false } },
-        yAxis: { type: "value", axisLabel: { formatter: v => fmt(v) } },
+        yAxis: [
+          { type: "value", name: "产成率", axisLabel: { formatter: "{value}%" }, min: 0 },
+          { type: "value", name: "单价", axisLabel: { formatter: "{value}" }, scale: true }
+        ],
         series: [
-          { name: "产量", type: "bar", data: report.factories.map(f => num((f.daily_core || {})["屠宰加工产量"]) + num((f.daily_core || {})["外采加工产量"])), itemStyle: { borderRadius: [6,6,0,0] } },
-          { name: "销量", type: "bar", data: report.factories.map(f => num((f.daily_core || {})["销量"])), itemStyle: { borderRadius: [6,6,0,0] } }
+          { name: "总产成率", type: "bar", data: report.factories.map(f => factoryYield(f)), itemStyle: { borderRadius: [6,6,0,0] }, label: { show: true, position: "top", formatter: p => pct(p.value) } },
+          { name: "总单价", type: "line", yAxisIndex: 1, smooth: true, symbolSize: 8, data: report.factories.map(f => factoryPrice(f)), label: { show: true, position: "top", formatter: p => fmt(p.value, " 元/kg") } }
         ]
       }, true);
     }
@@ -614,19 +609,18 @@
 
     function renderCategorySaleRateChart() {
       const factory = visibleFactory();
-      const rows = filteredOverview(factory).slice().sort((a, b) => num(a["产销率"]) - num(b["产销率"])).slice(0, topN()).reverse();
+      const rows = filteredOverview(factory).slice().sort((a, b) => num(a["产成率%"]) - num(b["产成率%"])).slice(0, topN()).reverse();
       initChart("categorySaleRateChart").setOption({
         color: [COLORS[2]],
         tooltip: { trigger: "axis", valueFormatter: v => pct(v) },
         grid: { left: 92, right: 42, top: 24, bottom: 30 },
-        xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, max: 120 },
+        xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, max: 100 },
         yAxis: { type: "category", data: rows.map(r => r["项目"]), axisTick: { show: false } },
         series: [{
           type: "bar",
-          data: rows.map(r => num(r["产销率"])),
+          data: rows.map(r => num(r["产成率%"])),
           label: { show: true, position: "right", formatter: p => pct(p.value) },
-          itemStyle: { borderRadius: [0, 6, 6, 0] },
-          markLine: { symbol: "none", data: [{ xAxis: 90, name: "90%" }], label: { formatter: "90%" } }
+          itemStyle: { borderRadius: [0, 6, 6, 0] }
         }]
       }, true);
     }
@@ -687,7 +681,7 @@
 
     function resetFilters() {
       document.getElementById("factoryFilter").value = "__all__";
-      document.getElementById("metricFilter").value = "产销率";
+      document.getElementById("metricFilter").value = "总产成率";
       document.getElementById("topFilter").value = "8";
       document.getElementById("searchInput").value = "";
       render();
