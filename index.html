@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PVM 三厂日报驾驶舱</title>
+  <title>PVM肉品产值分析报表</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <style>
     :root {
@@ -140,6 +140,27 @@
     section { margin-top: 12px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .treemap-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .treemap-card {
+      border: 1px solid #e1e9f2;
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 0;
+      background: #fbfdff;
+    }
+    .treemap-card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .tree-chart {
+      height: 360px;
+      min-height: 320px;
+      width: 100%;
+    }
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -224,13 +245,13 @@
       margin-top: 8px;
     }
     @media (max-width: 1280px) {
-      .filters, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr 1fr; }
+      .filters, .grid-2, .grid-3, .insights, .factory-strip, .treemap-row { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 760px) {
       .wrap { padding: 12px; }
       header { display: block; }
-      .filters, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr; }
-      .chart, .chart.tall { height: 440px; min-height: 360px; }
+      .filters, .grid-2, .grid-3, .insights, .factory-strip, .treemap-row { grid-template-columns: 1fr; }
+      .chart, .chart.tall, .tree-chart { height: 440px; min-height: 360px; }
       h1 { font-size: 22px; }
     }
   </style>
@@ -239,7 +260,7 @@
   <div class="wrap">
     <header>
       <div>
-        <h1>PVM 三厂日报驾驶舱</h1>
+        <h1>PVM肉品产值分析报表</h1>
         <div class="sub">先看产成率和单价，再看品类结构、价格趋势和 SKU 贡献。</div>
       </div>
       <div class="actions">
@@ -324,7 +345,7 @@
           <h2>工厂品类结构树图</h2>
           <span class="panel-note">面积代表含税金额贡献</span>
         </div>
-        <div id="categoryTreemapChart" class="chart"></div>
+        <div id="categoryTreemapGrid" class="treemap-row"></div>
       </div>
     </section>
 
@@ -605,45 +626,53 @@
 
     function renderCategoryTreemapChart() {
       const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
-      const data = factories.map(factory => ({
-        name: factory.factory,
-        children: ((factory.sku || {}).by_category || [])
+      const grid = document.getElementById("categoryTreemapGrid");
+      const activeIds = new Set();
+      grid.innerHTML = factories.map((factory, idx) => {
+        const id = `categoryTreemapChart${idx}`;
+        activeIds.add(id);
+        return `<div class="treemap-card"><h3>${escapeHtml(factory.factory)}</h3><div id="${id}" class="tree-chart"></div></div>`;
+      }).join("");
+
+      Object.keys(charts)
+        .filter(id => id.startsWith("categoryTreemapChart") && !activeIds.has(id))
+        .forEach(id => {
+          charts[id].dispose();
+          delete charts[id];
+        });
+
+      factories.forEach((factory, idx) => {
+        const id = `categoryTreemapChart${idx}`;
+        const rows = ((factory.sku || {}).by_category || [])
           .filter(row => num(row["含税金额"]) > 0)
-          .slice(0, 16)
+          .slice(0, 18)
           .map(row => ({
             name: row["部位大类"],
             value: num(row["含税金额"]),
             itemStyle: { borderColor: "#fff" }
-          }))
-      }));
-      initChart("categoryTreemapChart").setOption({
-        color: COLORS,
-        tooltip: {
-          formatter: info => `${info.name}<br>含税金额：${fmt(num(info.value), " 元")}`
-        },
-        series: [{
-          type: "treemap",
-          roam: false,
-          nodeClick: false,
-          breadcrumb: { show: false },
-          data,
-          label: {
-            show: true,
-            formatter: "{b}",
-            fontSize: 13
+          }));
+        initChart(id).setOption({
+          color: COLORS,
+          tooltip: {
+            formatter: info => `${factory.factory}<br>${info.name}<br>含税金额：${fmt(num(info.value), " 元")}`
           },
-          upperLabel: {
-            show: true,
-            height: 24,
-            color: "#122033",
-            fontWeight: 700
-          },
-          levels: [
-            { itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 } },
-            { itemStyle: { borderColor: "#fff", borderWidth: 2, gapWidth: 2 } }
-          ]
-        }]
-      }, true);
+          series: [{
+            type: "treemap",
+            roam: false,
+            nodeClick: false,
+            breadcrumb: { show: false },
+            data: rows,
+            label: {
+              show: true,
+              formatter: "{b}",
+              fontSize: 13
+            },
+            levels: [
+              { itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 } }
+            ]
+          }]
+        }, true);
+      });
     }
 
     function priceTrendBlock(factory) {
