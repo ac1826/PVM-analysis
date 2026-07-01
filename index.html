@@ -131,27 +131,12 @@
       border-color: #f0d9a9;
       background: #fffaf0;
     }
-    .kpis {
+    .factory-strip {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin: 14px 0;
     }
-    .kpi {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 14px 16px;
-      min-height: 92px;
-    }
-    .kpi .label { color: var(--muted); font-size: 13px; }
-    .kpi .value {
-      margin-top: 10px;
-      font-size: 24px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .kpi.alert .label, .kpi.alert .value { color: var(--orange); }
     section { margin-top: 12px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
@@ -175,17 +160,11 @@
     .chart { height: 420px; min-height: 340px; width: 100%; }
     .chart.compact { height: 330px; min-height: 300px; }
     .chart.tall { height: 520px; min-height: 430px; }
-    .factory-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin: 12px 0;
-    }
     .factory-card {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 14px;
+      padding: 16px;
       box-shadow: 0 10px 24px rgba(15,23,42,.04);
     }
     .factory-card .name {
@@ -194,7 +173,8 @@
       gap: 10px;
       align-items: center;
       font-weight: 800;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      font-size: 18px;
     }
     .status-pill {
       display: inline-flex;
@@ -209,7 +189,7 @@
     .status-pill.warn { background: var(--orange); }
     .factory-card .mini-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
     }
     .mini {
@@ -225,7 +205,7 @@
     .mini .value {
       margin-top: 5px;
       font-weight: 800;
-      font-size: 16px;
+      font-size: 20px;
       white-space: nowrap;
     }
     .empty {
@@ -244,12 +224,12 @@
       margin-top: 8px;
     }
     @media (max-width: 1280px) {
-      .filters, .kpis, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr 1fr; }
+      .filters, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 760px) {
       .wrap { padding: 12px; }
       header { display: block; }
-      .filters, .kpis, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr; }
+      .filters, .grid-2, .grid-3, .insights, .factory-strip { grid-template-columns: 1fr; }
       .chart, .chart.tall { height: 440px; min-height: 360px; }
       h1 { font-size: 22px; }
     }
@@ -297,7 +277,6 @@
 
     <div id="scope" class="scope-note"></div>
     <div id="insightCards" class="insights"></div>
-    <div id="kpiCards" class="kpis"></div>
     <div id="factoryCards" class="factory-strip"></div>
 
     <section class="grid-2">
@@ -440,7 +419,6 @@
       }
       document.getElementById("scope").textContent =
         `数据日期：${report.report_date}；生成时间：${report.generated_at || "-"}；当前共 ${report.factory_count || 0} 个厂。`;
-      renderKpis();
       renderInsights();
       renderFactoryCards();
       renderFactoryMetricChart();
@@ -449,35 +427,6 @@
       renderCategorySaleRateChart();
       renderTrendChart();
       renderSkuRankChart();
-    }
-
-    function renderKpis() {
-      const factories = selectedFactory() ? [selectedFactory()] : report.factories;
-      const sums = factories.reduce((acc, f) => {
-        const c = f.daily_core || {};
-        acc.yield += num(c["总产成率"]);
-        acc.mainYield += num(c["主产品产成率"]);
-        acc.byproductYield += num(c["副产品产成率"]);
-        acc.price += num(c["总产值"]);
-        acc.mainPrice += num(c["主产品产值"]);
-        acc.byproductPrice += num(c["副产品产值"]);
-        return acc;
-      }, { yield: 0, mainYield: 0, byproductYield: 0, price: 0, mainPrice: 0, byproductPrice: 0 });
-      const count = Math.max(factories.length, 1);
-      const cards = [
-        ["平均总产成率", fmt(sums.yield / count, "%")],
-        ["主产品产成率", fmt(sums.mainYield / count, "%")],
-        ["副产品产成率", fmt(sums.byproductYield / count, "%")],
-        ["平均总单价", fmt(sums.price / count, " 元/kg")],
-        ["主产品单价", fmt(sums.mainPrice / count, " 元/kg")],
-        ["副产品单价", fmt(sums.byproductPrice / count, " 元/kg")]
-      ];
-      document.getElementById("kpiCards").innerHTML = cards.map(([label, value], idx) => `
-        <div class="kpi ${idx === 0 && parseFloat(value) < 94 ? "alert" : ""}">
-          <div class="label">${label}</div>
-          <div class="value">${value}</div>
-        </div>
-      `).join("");
     }
 
     function factoryYield(factory) {
@@ -515,7 +464,7 @@
           <div class="detail">${bestPrice ? `主产品 ${fmt(num(bestPrice.daily_core["主产品产值"]), " 元/kg")}，副产品 ${fmt(num(bestPrice.daily_core["副产品产值"]), " 元/kg")}。` : ""}</div>
         </div>
         <div class="insight">
-          <div class="eyebrow">重点品类</div>
+          <div class="eyebrow">品类线索</div>
           <div class="headline">${topCategory ? `${topCategory.factory} · ${topCategory["项目"]}` : "-"}</div>
           <div class="detail">${topCategory ? `产成率 ${pct(topCategory["产成率%"])}，含税单价 ${fmt(num(topCategory["含税单价"]), " 元/kg")}。` : ""}</div>
         </div>
@@ -537,7 +486,10 @@
             <div class="mini-grid">
               <div class="mini"><div class="label">总产成率</div><div class="value">${pct(c["总产成率"])}</div></div>
               <div class="mini"><div class="label">主产品产成率</div><div class="value">${pct(c["主产品产成率"])}</div></div>
+              <div class="mini"><div class="label">副产品产成率</div><div class="value">${pct(c["副产品产成率"])}</div></div>
               <div class="mini"><div class="label">总单价</div><div class="value">${fmt(c["总产值"], " 元/kg")}</div></div>
+              <div class="mini"><div class="label">主产品单价</div><div class="value">${fmt(c["主产品产值"], " 元/kg")}</div></div>
+              <div class="mini"><div class="label">副产品单价</div><div class="value">${fmt(c["副产品产值"], " 元/kg")}</div></div>
             </div>
           </div>
         `;
