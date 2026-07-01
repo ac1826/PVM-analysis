@@ -3,161 +3,298 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PVM 三厂每日分析看板</title>
+  <title>PVM 三厂每日可视化分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <style>
     :root {
-      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
-      color: #102033;
-      background: #f3f7fb;
-      --line: #dbe5f0;
-      --panel: #ffffff;
-      --muted: #63758c;
-      --brand: #1258b8;
-      --ok: #00866f;
-      --warn: #bb7a16;
-      --danger: #b63e36;
+      --bg: #f4f7fb;
+      --panel: #fff;
+      --text: #122033;
+      --muted: #64748b;
+      --line: #dde6f0;
+      --accent: #126c70;
+      --blue: #1258b8;
+      --orange: #b45309;
+      --red: #b42318;
+      --green: #047857;
+      color: var(--text);
+      background: var(--bg);
+      font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
     }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background:
-        linear-gradient(90deg, rgba(18, 88, 184, .06) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(18, 88, 184, .05) 1px, transparent 1px),
-        linear-gradient(135deg, #f9fbff 0%, #eef4fa 52%, #e7f0f8 100%);
-      background-size: 42px 42px, 42px 42px, auto;
-    }
-    main {
-      width: min(1240px, calc(100vw - 32px));
+    body { margin: 0; background: var(--bg); }
+    .wrap {
+      max-width: 1920px;
       margin: 0 auto;
-      padding: 28px 0 42px;
+      padding: 20px 24px 38px;
     }
     header {
       display: flex;
       justify-content: space-between;
-      gap: 18px;
-      align-items: end;
-      margin-bottom: 20px;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
     }
     h1 {
       margin: 0;
-      font-size: clamp(28px, 4vw, 46px);
+      font-size: 28px;
       letter-spacing: 0;
     }
     .sub {
-      margin-top: 8px;
+      margin-top: 7px;
       color: var(--muted);
       font-size: 14px;
     }
-    .badge {
-      border: 1px solid var(--line);
-      background: rgba(255,255,255,.82);
-      padding: 10px 14px;
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    button, select, input { font: inherit; }
+    .btn, .seg-btn {
+      border: 1px solid #cbd5e1;
+      background: #fff;
+      color: #334155;
       border-radius: 8px;
-      color: #39516e;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .seg-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: 180px minmax(260px, 1fr) 180px 180px auto;
+      gap: 12px;
+      align-items: end;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 14px 0;
+    }
+    .filter label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .filter select, .filter input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #fff;
+      color: var(--text);
+      height: 40px;
+    }
+    .scope-note {
+      margin: 14px 2px 8px;
+      color: #475569;
+      font-size: 14px;
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .kpi {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px;
+      min-height: 92px;
+    }
+    .kpi .label { color: var(--muted); font-size: 13px; }
+    .kpi .value {
+      margin-top: 10px;
+      font-size: 24px;
+      font-weight: 700;
       white-space: nowrap;
     }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 14px;
-    }
+    .kpi.alert .label, .kpi.alert .value { color: var(--orange); }
+    section { margin-top: 12px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 16px 42px rgba(16, 38, 67, .08);
-      padding: 16px;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 10px 24px rgba(15,23,42,.04);
+      min-width: 0;
     }
-    .span-12 { grid-column: span 12; }
-    .span-6 { grid-column: span 6; }
-    .span-4 { grid-column: span 4; }
-    .panel h2 {
-      margin: 0 0 12px;
-      font-size: 18px;
-    }
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(6, minmax(130px, 1fr));
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
       gap: 10px;
+      align-items: center;
+      margin-bottom: 6px;
     }
-    .metric {
-      border: 1px solid #e1e9f2;
-      background: #f9fbfe;
+    h2 { margin: 0; font-size: 20px; }
+    .panel-note { color: var(--muted); font-size: 13px; text-align: right; }
+    .chart { height: 420px; min-height: 340px; width: 100%; }
+    .chart.compact { height: 330px; min-height: 300px; }
+    .chart.tall { height: 520px; min-height: 430px; }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 12px;
-      min-height: 82px;
+      max-height: 520px;
     }
-    .metric .label {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-    .metric .value {
-      font-size: 21px;
-      font-weight: 800;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
     th, td {
-      border-bottom: 1px solid #e6edf5;
-      padding: 9px 8px;
-      text-align: left;
-      vertical-align: top;
+      padding: 9px 10px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: right;
+      white-space: nowrap;
     }
     th {
-      color: #40556f;
-      background: #f6f9fc;
-      font-weight: 700;
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      color: #475569;
+      z-index: 1;
     }
-    .factory-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
+    td:first-child, th:first-child, td:nth-child(2), th:nth-child(2) { text-align: left; }
+    .empty {
+      color: var(--muted);
+      border: 1px dashed #b9c7d8;
+      border-radius: 10px;
+      padding: 24px;
+      background: rgba(255,255,255,.78);
     }
-    .factory-title strong { font-size: 20px; }
     .warn {
-      color: var(--warn);
+      color: var(--orange);
       background: #fff8e8;
       border: 1px solid #f0d9a9;
       border-radius: 8px;
       padding: 10px 12px;
-      margin: 8px 0;
+      margin-top: 8px;
     }
-    .empty {
-      color: var(--muted);
-      border: 1px dashed #b9c7d8;
-      border-radius: 8px;
-      padding: 24px;
-      background: rgba(255,255,255,.75);
+    @media (max-width: 1280px) {
+      .filters, .kpis, .grid-2, .grid-3 { grid-template-columns: 1fr 1fr; }
     }
-    @media (max-width: 900px) {
-      header { align-items: start; flex-direction: column; }
-      .span-6, .span-4 { grid-column: span 12; }
-      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 760px) {
+      .wrap { padding: 12px; }
+      header { display: block; }
+      .filters, .kpis, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      .chart, .chart.tall { height: 440px; min-height: 360px; }
+      h1 { font-size: 22px; }
     }
   </style>
 </head>
 <body>
-  <main>
+  <div class="wrap">
     <header>
       <div>
-        <h1>PVM 三厂每日分析看板</h1>
-        <div class="sub">读取 GitHub Pages 仓库中的 data/latest.json，展示最新同步日报。</div>
+        <h1>PVM 三厂每日可视化分析</h1>
+        <div class="sub">产量、销量、产成率、产销率、品类结构与 SKU 排行的每日追踪。</div>
       </div>
-      <div class="badge" id="status">正在读取数据</div>
+      <div class="actions">
+        <button class="btn" onclick="resetFilters()">重置筛选</button>
+        <button class="btn" onclick="downloadChart()">导出当前图表</button>
+      </div>
     </header>
 
-    <section class="grid" id="app"></section>
-  </main>
+    <div class="filters">
+      <div class="filter">
+        <label>数据日期</label>
+        <select id="dateFilter"></select>
+      </div>
+      <div class="filter">
+        <label>工厂</label>
+        <select id="factoryFilter"></select>
+      </div>
+      <div class="filter">
+        <label>对比指标</label>
+        <select id="metricFilter"></select>
+      </div>
+      <div class="filter">
+        <label>品类 Top 数</label>
+        <select id="topFilter">
+          <option value="8">Top 8</option>
+          <option value="12">Top 12</option>
+          <option value="20">Top 20</option>
+        </select>
+      </div>
+      <div class="filter">
+        <label>搜索品类/SKU</label>
+        <input id="searchInput" type="search" placeholder="腿类、胸类、物料描述..." />
+      </div>
+    </div>
+
+    <div id="scope" class="scope-note"></div>
+    <div id="kpiCards" class="kpis"></div>
+    <div id="warningBox"></div>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>三厂核心指标对比</h2>
+          <span class="panel-note">按当前指标横向比较</span>
+        </div>
+        <div id="factoryMetricChart" class="chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>产量与销量对比</h2>
+          <span class="panel-note">判断产销匹配</span>
+        </div>
+        <div id="volumeSalesChart" class="chart"></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>品类金额结构</h2>
+          <span id="categoryNote" class="panel-note"></span>
+        </div>
+        <div id="categoryAmountChart" class="chart tall"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>品类产销率表现</h2>
+          <span class="panel-note">低产销率优先关注</span>
+        </div>
+        <div id="categorySaleRateChart" class="chart tall"></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>本月含税单价趋势</h2>
+          <span class="panel-note">当前工厂主要品类</span>
+        </div>
+        <div id="trendChart" class="chart"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head">
+          <h2>SKU 金额排行</h2>
+          <span class="panel-note">定位主要收入来源</span>
+        </div>
+        <div id="skuRankChart" class="chart"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>当日总览明细</h2>
+        <span class="panel-note">当前工厂，可搜索过滤</span>
+      </div>
+      <div id="overviewTable" class="table-wrap"></div>
+    </section>
+  </div>
 
   <script>
-    const metricFields = [
+    const METRICS = [
       ["总产成率", "%"],
       ["总产值", " 元/kg"],
       ["屠宰加工产量", " 吨"],
@@ -165,69 +302,315 @@
       ["产销率", "%"],
       ["均重", " kg/只"]
     ];
+    const COLORS = ["#126c70", "#1258b8", "#b45309", "#047857", "#7c3aed", "#b42318", "#64748b"];
+    let report = null;
+    let charts = {};
 
+    function num(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
     function fmt(value, suffix = "") {
       if (value === null || value === undefined || value === "") return "-";
-      if (typeof value === "number") return value.toLocaleString("zh-CN", { maximumFractionDigits: 2 }) + suffix;
+      if (typeof value === "number") {
+        return value.toLocaleString("zh-CN", { maximumFractionDigits: 2 }) + suffix;
+      }
       return String(value);
     }
-
-    function table(rows, columns) {
-      if (!rows || !rows.length) return '<div class="empty">暂无数据</div>';
-      return `<table><thead><tr>${columns.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
-        rows.map(row => `<tr>${columns.map(c => `<td>${fmt(row[c])}</td>`).join("")}</tr>`).join("") +
-        `</tbody></table>`;
+    function pct(value) {
+      return fmt(num(value), "%");
+    }
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[s]));
+    }
+    function initChart(id) {
+      charts[id] = charts[id] || echarts.init(document.getElementById(id));
+      return charts[id];
+    }
+    function selectedFactory() {
+      const value = document.getElementById("factoryFilter").value;
+      if (value === "__all__") return null;
+      return report.factories.find(f => f.factory === value) || report.factories[0];
+    }
+    function visibleFactory() {
+      return selectedFactory() || report.factories[0];
+    }
+    function topN() {
+      return Number(document.getElementById("topFilter").value || 8);
+    }
+    function searchText() {
+      return document.getElementById("searchInput").value.trim().toLowerCase();
     }
 
-    function render(report) {
-      const app = document.getElementById("app");
+    async function loadReport() {
+      const indexResponse = await fetch("./data/index.json", { cache: "no-store" });
+      const index = await indexResponse.json();
+      const dateFilter = document.getElementById("dateFilter");
+      dateFilter.innerHTML = (index.dates || []).map(d => `<option value="${d}">${d}</option>`).join("");
+      const latest = index.latest_date || (index.dates || [])[0];
+      if (latest) dateFilter.value = latest;
+      await loadDate(latest || "latest");
+    }
+
+    async function loadDate(dateValue) {
+      const url = dateValue === "latest" ? "./data/latest.json" : `./data/daily/${dateValue}.json`;
+      const response = await fetch(url, { cache: "no-store" });
+      report = await response.json();
+      setupControls();
+      render();
+    }
+
+    function setupControls() {
+      const factoryFilter = document.getElementById("factoryFilter");
+      const currentFactory = factoryFilter.value;
+      factoryFilter.innerHTML = '<option value="__all__">全部工厂</option>' +
+        (report.factories || []).map(f => `<option value="${escapeHtml(f.factory)}">${escapeHtml(f.factory)}</option>`).join("");
+      if ([...factoryFilter.options].some(o => o.value === currentFactory)) factoryFilter.value = currentFactory;
+
+      const metricFilter = document.getElementById("metricFilter");
+      if (!metricFilter.innerHTML) {
+        metricFilter.innerHTML = METRICS.map(([m]) => `<option value="${m}">${m}</option>`).join("");
+        metricFilter.value = "产销率";
+      }
+    }
+
+    function render() {
       if (!report || !report.report_date) {
-        app.innerHTML = '<div class="panel span-12 empty">还没有同步日报数据。请先在本地上传分析工具中上传三厂 Excel 并同步到 GitHub。</div>';
-        document.getElementById("status").textContent = "等待首次同步";
+        document.querySelector(".wrap").innerHTML += '<div class="empty">还没有同步日报数据。</div>';
         return;
       }
+      document.getElementById("scope").textContent =
+        `数据日期：${report.report_date}；生成时间：${report.generated_at || "-"}；当前共 ${report.factory_count || 0} 个厂。`;
+      renderKpis();
+      renderWarnings();
+      renderFactoryMetricChart();
+      renderVolumeSalesChart();
+      renderCategoryAmountChart();
+      renderCategorySaleRateChart();
+      renderTrendChart();
+      renderSkuRankChart();
+      renderOverviewTable();
+    }
 
-      document.getElementById("status").textContent = `${report.report_date} · ${report.factory_count || 0} 个厂`;
-      const warnings = (report.warnings || []).map(w => `<div class="warn">${w}</div>`).join("");
-      const factoryCards = (report.factories || []).map(factory => {
-        const core = factory.daily_core || {};
-        const metrics = metricFields.map(([key, suffix]) => `
-          <div class="metric">
-            <div class="label">${key}</div>
-            <div class="value">${fmt(core[key], suffix)}</div>
-          </div>
-        `).join("");
-        const overview = table(factory.overview || [], ["项目", "产量(kg)", "销量(kg)", "产成率%", "含税金额", "含税单价", "产销率"]);
-        return `
-          <article class="panel span-12">
-            <div class="factory-title">
-              <strong>${factory.factory}</strong>
-              <span>${factory.daily_label || report.report_date}</span>
-            </div>
-            <div class="metrics">${metrics}</div>
-            <h2 style="margin-top:18px;">当日总览</h2>
-            ${overview}
-          </article>
-        `;
-      }).join("");
+    function renderKpis() {
+      const factories = selectedFactory() ? [selectedFactory()] : report.factories;
+      const sums = factories.reduce((acc, f) => {
+        const c = f.daily_core || {};
+        acc.volume += num(c["屠宰加工产量"]) + num(c["外采加工产量"]);
+        acc.sales += num(c["销量"]);
+        acc.amount += (f.overview || []).reduce((s, r) => s + num(r["含税金额"]), 0);
+        acc.chickens += num(c["宰鸡量"]);
+        acc.weight += num(c["均重"]);
+        acc.yield += num(c["总产成率"]);
+        acc.saleRate += num(c["产销率"]);
+        return acc;
+      }, { volume: 0, sales: 0, amount: 0, chickens: 0, weight: 0, yield: 0, saleRate: 0 });
+      const count = Math.max(factories.length, 1);
+      const cards = [
+        ["总产量", fmt(sums.volume, " 吨")],
+        ["总销量", fmt(sums.sales, " 吨")],
+        ["含税金额", fmt(sums.amount, " 元")],
+        ["平均产成率", fmt(sums.yield / count, "%")],
+        ["平均产销率", fmt(sums.saleRate / count, "%")],
+        ["宰鸡量", fmt(sums.chickens, " 千只")]
+      ];
+      document.getElementById("kpiCards").innerHTML = cards.map(([label, value], idx) => `
+        <div class="kpi ${idx === 4 && parseFloat(value) < 90 ? "alert" : ""}">
+          <div class="label">${label}</div>
+          <div class="value">${value}</div>
+        </div>
+      `).join("");
+    }
 
-      app.innerHTML = `
-        <section class="panel span-12">
-          <h2>同步状态</h2>
-          <div>生成时间：${fmt(report.generated_at)} · 数据日期：${fmt(report.report_date)}</div>
-          ${warnings || '<div class="sub">暂无异常提醒</div>'}
-        </section>
-        ${factoryCards}
+    function renderWarnings() {
+      const warnings = report.warnings || [];
+      document.getElementById("warningBox").innerHTML = warnings.length
+        ? warnings.map(w => `<div class="warn">${escapeHtml(w)}</div>`).join("")
+        : "";
+    }
+
+    function renderFactoryMetricChart() {
+      const metric = document.getElementById("metricFilter").value;
+      const suffix = (METRICS.find(([m]) => m === metric) || ["", ""])[1];
+      const names = report.factories.map(f => f.factory);
+      const values = report.factories.map(f => num((f.daily_core || {})[metric]));
+      initChart("factoryMetricChart").setOption({
+        color: [COLORS[0]],
+        tooltip: { trigger: "axis", valueFormatter: v => fmt(v, suffix) },
+        grid: { left: 54, right: 20, top: 36, bottom: 42 },
+        xAxis: { type: "category", data: names, axisTick: { show: false } },
+        yAxis: { type: "value", axisLabel: { formatter: v => fmt(v) } },
+        series: [{
+          type: "bar",
+          data: values,
+          barMaxWidth: 46,
+          label: { show: true, position: "top", formatter: p => fmt(p.value, suffix) },
+          itemStyle: { borderRadius: [6, 6, 0, 0] }
+        }]
+      }, true);
+    }
+
+    function renderVolumeSalesChart() {
+      const names = report.factories.map(f => f.factory);
+      initChart("volumeSalesChart").setOption({
+        color: [COLORS[1], COLORS[2]],
+        tooltip: { trigger: "axis", valueFormatter: v => fmt(v, " 吨") },
+        legend: { top: 4 },
+        grid: { left: 56, right: 20, top: 50, bottom: 42 },
+        xAxis: { type: "category", data: names, axisTick: { show: false } },
+        yAxis: { type: "value", axisLabel: { formatter: v => fmt(v) } },
+        series: [
+          { name: "产量", type: "bar", data: report.factories.map(f => num((f.daily_core || {})["屠宰加工产量"]) + num((f.daily_core || {})["外采加工产量"])), itemStyle: { borderRadius: [6,6,0,0] } },
+          { name: "销量", type: "bar", data: report.factories.map(f => num((f.daily_core || {})["销量"])), itemStyle: { borderRadius: [6,6,0,0] } }
+        ]
+      }, true);
+    }
+
+    function filteredOverview(factory) {
+      const q = searchText();
+      return (factory.overview || []).filter(r => !q || String(r["项目"] || "").toLowerCase().includes(q));
+    }
+
+    function renderCategoryAmountChart() {
+      const factory = visibleFactory();
+      const rows = filteredOverview(factory).sort((a, b) => num(b["含税金额"]) - num(a["含税金额"])).slice(0, topN());
+      document.getElementById("categoryNote").textContent = `${factory.factory} · 按含税金额排序`;
+      initChart("categoryAmountChart").setOption({
+        color: COLORS,
+        tooltip: { trigger: "item", valueFormatter: v => fmt(v, " 元") },
+        legend: { type: "scroll", bottom: 0 },
+        series: [{
+          type: "pie",
+          radius: ["42%", "68%"],
+          center: ["50%", "45%"],
+          data: rows.map(r => ({ name: r["项目"], value: num(r["含税金额"]) })),
+          label: { formatter: "{b}\n{d}%" }
+        }]
+      }, true);
+    }
+
+    function renderCategorySaleRateChart() {
+      const factory = visibleFactory();
+      const rows = filteredOverview(factory).slice().sort((a, b) => num(a["产销率"]) - num(b["产销率"])).slice(0, topN()).reverse();
+      initChart("categorySaleRateChart").setOption({
+        color: [COLORS[2]],
+        tooltip: { trigger: "axis", valueFormatter: v => pct(v) },
+        grid: { left: 92, right: 42, top: 24, bottom: 30 },
+        xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, max: 120 },
+        yAxis: { type: "category", data: rows.map(r => r["项目"]), axisTick: { show: false } },
+        series: [{
+          type: "bar",
+          data: rows.map(r => num(r["产销率"])),
+          label: { show: true, position: "right", formatter: p => pct(p.value) },
+          itemStyle: { borderRadius: [0, 6, 6, 0] },
+          markLine: { symbol: "none", data: [{ xAxis: 90, name: "90%" }], label: { formatter: "90%" } }
+        }]
+      }, true);
+    }
+
+    function priceTrendBlock(factory) {
+      return ((factory.trend || {}).blocks || []).find(b => String(b.metric || "").includes("含税单价"));
+    }
+
+    function renderTrendChart() {
+      const factory = visibleFactory();
+      const block = priceTrendBlock(factory);
+      if (!block) {
+        initChart("trendChart").clear();
+        document.getElementById("trendChart").innerHTML = '<div class="empty">暂无趋势数据</div>';
+        return;
+      }
+      const q = searchText();
+      const rows = (block.rows || []).filter(r => !q || String(r.name || "").toLowerCase().includes(q)).slice(0, 8);
+      const headers = (block.headers || []).map(h => String(h || "")).filter(Boolean);
+      initChart("trendChart").setOption({
+        color: COLORS,
+        tooltip: { trigger: "axis", valueFormatter: v => fmt(v, " 元/kg") },
+        legend: { type: "scroll", top: 4 },
+        grid: { left: 48, right: 24, top: 54, bottom: 42 },
+        xAxis: { type: "category", data: headers },
+        yAxis: { type: "value", scale: true, axisLabel: { formatter: v => fmt(v) } },
+        series: rows.map(r => ({
+          name: r.name,
+          type: "line",
+          smooth: true,
+          symbolSize: 5,
+          data: (r.values || []).slice(0, headers.length).map(v => v === "—" ? null : num(v))
+        }))
+      }, true);
+    }
+
+    function renderSkuRankChart() {
+      const factory = visibleFactory();
+      const q = searchText();
+      const rows = ((factory.sku || {}).top_amount || [])
+        .filter(r => !q || [r["部位大类"], r["物料描述"], r["子类"]].some(v => String(v || "").toLowerCase().includes(q)))
+        .slice(0, topN())
+        .reverse();
+      initChart("skuRankChart").setOption({
+        color: [COLORS[1]],
+        tooltip: { trigger: "axis", valueFormatter: v => fmt(v, " 元") },
+        grid: { left: 150, right: 34, top: 24, bottom: 30 },
+        xAxis: { type: "value", axisLabel: { formatter: v => fmt(v) } },
+        yAxis: { type: "category", data: rows.map(r => String(r["物料描述"] || r["子类"]).slice(0, 18)), axisTick: { show: false } },
+        series: [{
+          type: "bar",
+          data: rows.map(r => num(r["含税金额"])),
+          label: { show: true, position: "right", formatter: p => fmt(p.value) },
+          itemStyle: { borderRadius: [0, 6, 6, 0] }
+        }]
+      }, true);
+    }
+
+    function renderOverviewTable() {
+      const factory = visibleFactory();
+      const rows = filteredOverview(factory);
+      const columns = ["项目", "产量(kg)", "销量(kg)", "产成率%", "含税金额", "含税单价", "产销率"];
+      if (!rows.length) {
+        document.getElementById("overviewTable").innerHTML = '<div class="empty">没有匹配的明细。</div>';
+        return;
+      }
+      document.getElementById("overviewTable").innerHTML = `
+        <table>
+          <thead><tr>${columns.map(c => `<th>${c}</th>`).join("")}</tr></thead>
+          <tbody>
+            ${rows.map(r => `<tr>${columns.map(c => `<td>${fmt(r[c], c.includes("率") ? "%" : "")}</td>`).join("")}</tr>`).join("")}
+          </tbody>
+        </table>
       `;
     }
 
-    fetch("./data/latest.json", { cache: "no-store" })
-      .then(response => response.json())
-      .then(render)
-      .catch(error => {
-        document.getElementById("status").textContent = "读取失败";
-        document.getElementById("app").innerHTML = `<div class="panel span-12 empty">无法读取 data/latest.json：${error.message}</div>`;
+    function resetFilters() {
+      document.getElementById("factoryFilter").value = "__all__";
+      document.getElementById("metricFilter").value = "产销率";
+      document.getElementById("topFilter").value = "8";
+      document.getElementById("searchInput").value = "";
+      render();
+    }
+
+    function downloadChart() {
+      const chart = charts.factoryMetricChart;
+      if (!chart) return;
+      const link = document.createElement("a");
+      link.download = `PVM-${report.report_date}-核心指标.png`;
+      link.href = chart.getDataURL({ pixelRatio: 2, backgroundColor: "#fff" });
+      link.click();
+    }
+
+    ["factoryFilter", "metricFilter", "topFilter", "searchInput"].forEach(id => {
+      document.addEventListener("input", event => {
+        if (event.target && event.target.id === id) render();
       });
+      document.addEventListener("change", event => {
+        if (event.target && event.target.id === id) render();
+      });
+    });
+    document.getElementById("dateFilter").addEventListener("change", event => loadDate(event.target.value));
+    window.addEventListener("resize", () => Object.values(charts).forEach(chart => chart.resize()));
+
+    loadReport().catch(error => {
+      document.querySelector(".wrap").insertAdjacentHTML("beforeend", `<div class="empty">无法读取数据：${escapeHtml(error.message)}</div>`);
+    });
   </script>
 </body>
 </html>
