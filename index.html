@@ -157,10 +157,11 @@
       font-size: 16px;
     }
     .tree-chart {
-      height: 360px;
-      min-height: 320px;
+      height: 560px;
+      min-height: 500px;
       width: 100%;
     }
+    .full-row { grid-column: 1 / -1; }
     .panel {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -342,6 +343,16 @@
       </div>
       <div class="panel">
         <div class="panel-head">
+          <h2>产成率-单价散点图</h2>
+          <span class="panel-note">每个点代表一个厂的一个品类</span>
+        </div>
+        <div id="yieldPriceScatterChart" class="chart"></div>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="panel full-row">
+        <div class="panel-head">
           <h2>工厂品类结构树图</h2>
           <span class="panel-note">面积代表含税金额贡献</span>
         </div>
@@ -350,6 +361,13 @@
     </section>
 
     <section class="grid-2">
+      <div class="panel">
+        <div class="panel-head">
+          <h2>品类单价热力图</h2>
+          <span class="panel-note">颜色越深单价越高</span>
+        </div>
+        <div id="categoryPriceHeatmapChart" class="chart"></div>
+      </div>
       <div class="panel">
         <div class="panel-head">
           <h2>本月单价趋势</h2>
@@ -459,7 +477,9 @@
       renderCategoryAmountChart();
       renderCategorySaleRateChart();
       renderPriceBoxplotChart();
+      renderYieldPriceScatterChart();
       renderCategoryTreemapChart();
+      renderCategoryPriceHeatmapChart();
       renderTrendChart();
       renderSkuRankChart();
     }
@@ -624,6 +644,46 @@
       }, true);
     }
 
+    function overviewRowsByFactory() {
+      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
+      return factories.flatMap(factory => (factory.overview || []).map(row => ({
+        factory: factory.factory,
+        category: row["项目"],
+        yieldRate: num(row["产成率%"]),
+        price: num(row["含税单价"]),
+        amount: num(row["含税金额"]),
+        volume: num(row["产量(kg)"])
+      }))).filter(row => row.price > 0 || row.yieldRate > 0);
+    }
+
+    function renderYieldPriceScatterChart() {
+      const rows = overviewRowsByFactory();
+      const factories = [...new Set(rows.map(row => row.factory))];
+      initChart("yieldPriceScatterChart").setOption({
+        color: COLORS,
+        tooltip: {
+          trigger: "item",
+          formatter: p => {
+            const r = p.data.raw;
+            return `${r.factory} · ${r.category}<br>产成率：${pct(r.yieldRate)}<br>含税单价：${fmt(r.price, " 元/kg")}<br>含税金额：${fmt(r.amount, " 元")}`;
+          }
+        },
+        legend: { top: 4, type: "scroll" },
+        grid: { left: 54, right: 28, top: 54, bottom: 42 },
+        xAxis: { type: "value", name: "产成率", axisLabel: { formatter: "{value}%" }, min: 0 },
+        yAxis: { type: "value", name: "元/kg", scale: true },
+        series: factories.map(factory => ({
+          name: factory,
+          type: "scatter",
+          symbolSize: value => Math.max(8, Math.min(34, Math.sqrt(Math.abs(value[2] || 0)) / 35)),
+          data: rows.filter(row => row.factory === factory).map(row => ({
+            value: [row.yieldRate, row.price, row.amount],
+            raw: row
+          }))
+        }))
+      }, true);
+    }
+
     function renderCategoryTreemapChart() {
       const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
       const grid = document.getElementById("categoryTreemapGrid");
@@ -673,6 +733,44 @@
           }]
         }, true);
       });
+    }
+
+    function renderCategoryPriceHeatmapChart() {
+      const rows = overviewRowsByFactory().filter(row => row.price > 0);
+      const factories = [...new Set(rows.map(row => row.factory))];
+      const categories = [...new Set(rows.map(row => row.category))].slice(0, topN());
+      const values = rows
+        .filter(row => categories.includes(row.category))
+        .map(row => [categories.indexOf(row.category), factories.indexOf(row.factory), row.price, row]);
+      const maxPrice = Math.max(...values.map(v => v[2]), 1);
+
+      initChart("categoryPriceHeatmapChart").setOption({
+        tooltip: {
+          position: "top",
+          formatter: p => {
+            const row = p.data[3];
+            return `${row.factory} · ${row.category}<br>含税单价：${fmt(row.price, " 元/kg")}<br>产成率：${pct(row.yieldRate)}`;
+          }
+        },
+        grid: { left: 84, right: 28, top: 44, bottom: 86 },
+        xAxis: { type: "category", data: categories, axisLabel: { rotate: 35 } },
+        yAxis: { type: "category", data: factories },
+        visualMap: {
+          min: 0,
+          max: maxPrice,
+          calculable: true,
+          orient: "horizontal",
+          left: "center",
+          bottom: 0,
+          inRange: { color: ["#e7f4f1", "#70b7ad", "#126c70"] }
+        },
+        series: [{
+          type: "heatmap",
+          data: values,
+          label: { show: true, formatter: p => fmt(p.data[2]) },
+          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,.18)" } }
+        }]
+      }, true);
     }
 
     function priceTrendBlock(factory) {
