@@ -191,24 +191,13 @@
     }
     .factory-card .name {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       gap: 10px;
       align-items: center;
       font-weight: 800;
       margin-bottom: 14px;
       font-size: 18px;
     }
-    .status-pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 4px 9px;
-      font-size: 12px;
-      color: #fff;
-      background: var(--green);
-      white-space: nowrap;
-    }
-    .status-pill.warn { background: var(--orange); }
     .factory-card .mini-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -495,14 +484,10 @@
     function renderFactoryCards() {
       document.getElementById("factoryCards").innerHTML = (report.factories || []).map(factory => {
         const c = factory.daily_core || {};
-        const totalYield = factoryYield(factory);
-        const status = totalYield >= 94 ? "产成率稳定" : "产成率待提升";
-        const statusClass = totalYield >= 94 ? "" : "warn";
         return `
           <div class="factory-card">
             <div class="name">
               <span>${escapeHtml(factory.factory)}</span>
-              <span class="status-pill ${statusClass}">${status}</span>
             </div>
             <div class="mini-grid">
               <div class="mini"><div class="label">总产成率</div><div class="value">${pct(c["总产成率"])}</div></div>
