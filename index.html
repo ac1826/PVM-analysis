@@ -23,11 +23,8 @@
     }
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--bg); }
-    .wrap {
-      max-width: 1920px;
-      margin: 0 auto;
-      padding: 20px 24px 38px;
-    }
+    button, select, input { font: inherit; }
+    .wrap { max-width: 1920px; margin: 0 auto; padding: 20px 24px 38px; }
     header {
       display: flex;
       justify-content: space-between;
@@ -35,25 +32,12 @@
       gap: 16px;
       margin-bottom: 14px;
     }
-    h1 {
-      margin: 0;
-      font-size: 28px;
-      letter-spacing: 0;
-    }
-    .sub {
-      margin-top: 7px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-      align-items: center;
-    }
-    button, select, input { font: inherit; }
-    .btn, .seg-btn {
+    h1 { margin: 0; font-size: 28px; letter-spacing: 0; }
+    h2 { margin: 0; font-size: 20px; }
+    h3 { margin: 0; font-size: 17px; }
+    .sub { margin-top: 7px; color: var(--muted); font-size: 14px; }
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; align-items: center; }
+    .btn, .tab-btn {
       border: 1px solid #cbd5e1;
       background: #fff;
       color: #334155;
@@ -61,14 +45,10 @@
       padding: 8px 12px;
       cursor: pointer;
     }
-    .seg-btn.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
+    .btn:hover, .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
     .filters {
       display: grid;
-      grid-template-columns: 180px minmax(260px, 1fr) 180px 180px auto;
+      grid-template-columns: 180px 180px 180px minmax(260px, 1fr) auto;
       gap: 12px;
       align-items: end;
       background: #fff;
@@ -92,75 +72,95 @@
       color: var(--text);
       height: 40px;
     }
-    .scope-note {
-      margin: 14px 2px 8px;
+    .meta {
       color: #475569;
-      font-size: 14px;
+      font-size: 13px;
+      padding: 8px 0 0;
+      white-space: nowrap;
     }
-    .insights {
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 8px 18px rgba(18,108,112,.18);
+    }
+    .attention-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr 1fr;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 12px;
       margin: 12px 0;
     }
-    .insight {
+    .attention-card {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 10px;
-      padding: 15px 16px;
-      min-height: 104px;
+      padding: 14px 15px;
+      min-height: 112px;
       box-shadow: 0 10px 24px rgba(15,23,42,.04);
     }
-    .insight .eyebrow {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-    .insight .headline {
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1.3;
-    }
-    .insight .detail {
-      color: #475569;
-      font-size: 13px;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
-    .insight.risk {
-      border-color: #f0d9a9;
-      background: #fffaf0;
-    }
+    .attention-card.risk { border-color: #f0d9a9; background: #fffaf0; }
+    .attention-card.price { border-color: #d6e7fb; background: #f7fbff; }
+    .attention-card .label { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+    .attention-card .value { font-size: 22px; font-weight: 850; line-height: 1.25; }
+    .attention-card .detail { color: #475569; font-size: 13px; margin-top: 8px; line-height: 1.45; }
     .factory-strip {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin: 14px 0;
     }
+    .factory-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(15,23,42,.04);
+    }
+    .factory-card .name {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      font-weight: 800;
+      margin-bottom: 14px;
+      font-size: 18px;
+    }
+    .factory-card .source {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+      text-align: right;
+    }
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .mini {
+      background: #f8fafc;
+      border: 1px solid #e6edf5;
+      border-radius: 8px;
+      padding: 9px;
+    }
+    .mini .label { color: var(--muted); font-size: 12px; }
+    .mini .value { margin-top: 5px; font-weight: 800; font-size: 20px; white-space: nowrap; }
     section { margin-top: 12px; }
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      margin: 18px 2px 8px;
+    }
+    .section-title p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-    .treemap-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .treemap-card {
-      border: 1px solid #e1e9f2;
-      border-radius: 8px;
-      padding: 10px;
-      min-width: 0;
-      background: #fbfdff;
-    }
-    .treemap-card h3 {
-      margin: 0 0 8px;
-      font-size: 16px;
-    }
-    .tree-chart {
-      height: 560px;
-      min-height: 500px;
-      width: 100%;
-    }
     .full-row { grid-column: 1 / -1; }
     .panel {
       background: var(--panel);
@@ -177,48 +177,41 @@
       align-items: center;
       margin-bottom: 6px;
     }
-    h2 { margin: 0; font-size: 20px; }
     .panel-note { color: var(--muted); font-size: 13px; text-align: right; }
     .chart { height: 420px; min-height: 340px; width: 100%; }
-    .chart.compact { height: 330px; min-height: 300px; }
     .chart.tall { height: 520px; min-height: 430px; }
-    .factory-card {
-      background: var(--panel);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 16px;
-      box-shadow: 0 10px 24px rgba(15,23,42,.04);
-    }
-    .factory-card .name {
-      display: flex;
-      justify-content: flex-start;
-      gap: 10px;
-      align-items: center;
-      font-weight: 800;
-      margin-bottom: 14px;
-      font-size: 18px;
-    }
-    .factory-card .mini-grid {
+    .treemap-row {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
     }
-    .mini {
-      background: #f8fafc;
+    .treemap-card {
+      border: 1px solid #e1e9f2;
+      border-radius: 8px;
+      padding: 10px;
+      min-width: 0;
+      background: #fbfdff;
+    }
+    .treemap-card h3 { margin: 0 0 8px; font-size: 16px; }
+    .tree-chart { height: 560px; min-height: 500px; width: 100%; }
+    .table-wrap {
+      max-height: 460px;
+      overflow: auto;
       border: 1px solid #e6edf5;
       border-radius: 8px;
-      padding: 9px;
     }
-    .mini .label {
-      color: var(--muted);
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 11px; border-bottom: 1px solid #eef2f7; text-align: left; white-space: nowrap; }
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8fafc;
+      color: #475569;
       font-size: 12px;
+      cursor: pointer;
     }
-    .mini .value {
-      margin-top: 5px;
-      font-weight: 800;
-      font-size: 20px;
-      white-space: nowrap;
-    }
+    tr:hover td { background: #fbfdff; }
     .empty {
       color: var(--muted);
       border: 1px dashed #b9c7d8;
@@ -226,23 +219,16 @@
       padding: 24px;
       background: rgba(255,255,255,.78);
     }
-    .warn {
-      color: var(--orange);
-      background: #fff8e8;
-      border: 1px solid #f0d9a9;
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-top: 8px;
-    }
     @media (max-width: 1280px) {
-      .filters, .grid-2, .grid-3, .insights, .factory-strip, .treemap-row { grid-template-columns: 1fr 1fr; }
+      .filters, .grid-2, .grid-3, .factory-strip, .treemap-row, .attention-grid { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 760px) {
       .wrap { padding: 12px; }
       header { display: block; }
-      .filters, .grid-2, .grid-3, .insights, .factory-strip, .treemap-row { grid-template-columns: 1fr; }
+      .filters, .grid-2, .grid-3, .factory-strip, .treemap-row, .attention-grid { grid-template-columns: 1fr; }
       .chart, .chart.tall, .tree-chart { height: 440px; min-height: 360px; }
       h1 { font-size: 22px; }
+      .section-title { display: block; }
     }
   </style>
 </head>
@@ -251,11 +237,11 @@
     <header>
       <div>
         <h1>PVM肉品产值分析报表</h1>
-        <div class="sub">先看产成率和单价，再看品类结构、价格趋势和 SKU 贡献。</div>
+        <div class="sub">按“今日重点 → 三厂对比 → 品类原因 → SKU 明细 → 趋势变化”阅读，优先看产成率和单价。</div>
       </div>
       <div class="actions">
         <button class="btn" onclick="resetFilters()">重置筛选</button>
-        <button class="btn" onclick="downloadChart()">导出当前图表</button>
+        <button class="btn" onclick="downloadChart()">导出核心指标图</button>
       </div>
     </header>
 
@@ -263,10 +249,6 @@
       <div class="filter">
         <label>数据日期</label>
         <select id="dateFilter"></select>
-      </div>
-      <div class="filter">
-        <label>工厂</label>
-        <select id="factoryFilter"></select>
       </div>
       <div class="filter">
         <label>对比指标</label>
@@ -284,92 +266,139 @@
         <label>聚焦品类/SKU</label>
         <input id="searchInput" type="search" placeholder="腿类、胸类、物料描述..." />
       </div>
+      <div id="dataMeta" class="meta"></div>
     </div>
 
+    <div id="factoryTabs" class="tabs"></div>
+    <div class="section-title">
+      <div>
+        <h2>今日重点</h2>
+        <p>自动提取最低产成率、总单价区间、低产成率品类和最大金额贡献。</p>
+      </div>
+    </div>
+    <div id="attentionCards" class="attention-grid"></div>
     <div id="factoryCards" class="factory-strip"></div>
 
-    <section class="grid-2">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>核心指标横向对比</h2>
-          <span class="panel-note">切换上方指标查看差异</span>
+    <section>
+      <div class="section-title">
+        <div>
+          <h2>1. 三厂今天谁需要先看？</h2>
+          <p>先判断产成率和总单价，再进入品类原因。</p>
         </div>
-        <div id="factoryMetricChart" class="chart"></div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>产成率与单价匹配</h2>
-          <span class="panel-note">同时看效率和价格质量</span>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>三厂核心指标谁偏离更明显？</h2>
+            <span class="panel-note">切换上方指标查看差异</span>
+          </div>
+          <div id="factoryMetricChart" class="chart"></div>
         </div>
-        <div id="volumeSalesChart" class="chart"></div>
-      </div>
-    </section>
-
-    <section class="grid-2">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>品类贡献结构</h2>
-          <span id="categoryNote" class="panel-note"></span>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>产成率和总单价是否匹配？</h2>
+            <span class="panel-note">柱为总产成率，线为总单价</span>
+          </div>
+          <div id="volumeSalesChart" class="chart"></div>
         </div>
-        <div id="categoryAmountChart" class="chart tall"></div>
-      </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>低产成率品类</h2>
-          <span class="panel-note">越靠下越需要关注出成效率</span>
-        </div>
-        <div id="categorySaleRateChart" class="chart tall"></div>
       </div>
     </section>
 
-    <section class="grid-2">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>品类单价箱线图</h2>
-          <span class="panel-note">看各厂品类价格离散程度</span>
+    <section>
+      <div class="section-title">
+        <div>
+          <h2>2. 是哪些品类在驱动结果？</h2>
+          <p>看金额贡献和低产成率品类，定位优先复盘对象。</p>
         </div>
-        <div id="priceBoxplotChart" class="chart"></div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>产成率-单价散点图</h2>
-          <span class="panel-note">每个点代表一个厂的一个品类</span>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>哪些品类贡献金额最大？</h2>
+            <span id="categoryNote" class="panel-note"></span>
+          </div>
+          <div id="categoryAmountChart" class="chart tall"></div>
         </div>
-        <div id="yieldPriceScatterChart" class="chart"></div>
-      </div>
-    </section>
-
-    <section class="grid-2">
-      <div class="panel full-row">
-        <div class="panel-head">
-          <h2>工厂品类结构树图</h2>
-          <span class="panel-note">面积代表含税金额贡献</span>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>哪些品类产成率拖累最大？</h2>
+            <span class="panel-note">低于目标线优先关注</span>
+          </div>
+          <div id="categorySaleRateChart" class="chart tall"></div>
         </div>
-        <div id="categoryTreemapGrid" class="treemap-row"></div>
       </div>
     </section>
 
-    <section class="grid-2">
-      <div class="panel">
-        <div class="panel-head">
-          <h2>品类单价热力图</h2>
-          <span class="panel-note">颜色越深单价越高</span>
+    <section>
+      <div class="section-title">
+        <div>
+          <h2>3. 单价质量是否稳定？</h2>
+          <p>看价格离散、产成率-单价位置，以及各厂品类单价差异。</p>
         </div>
-        <div id="categoryPriceHeatmapChart" class="chart"></div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>本月单价趋势</h2>
-          <span class="panel-note">当前工厂主要品类走势</span>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>各厂品类单价波动有多大？</h2>
+            <span class="panel-note">箱线图看离散程度</span>
+          </div>
+          <div id="priceBoxplotChart" class="chart"></div>
         </div>
-        <div id="trendChart" class="chart"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>高单价是否伴随低产成率？</h2>
+            <span class="panel-note">每个点代表一个厂的一个品类</span>
+          </div>
+          <div id="yieldPriceScatterChart" class="chart"></div>
+        </div>
       </div>
-      <div class="panel">
-        <div class="panel-head">
-          <h2>SKU 贡献排行</h2>
-          <span class="panel-note">定位主要收入来源</span>
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>哪些品类单价明显偏高？</h2>
+            <span class="panel-note">颜色越深单价越高</span>
+          </div>
+          <div id="categoryPriceHeatmapChart" class="chart"></div>
         </div>
-        <div id="skuRankChart" class="chart"></div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>本月主要品类单价怎么走？</h2>
+            <span class="panel-note">当前工厂主要品类走势</span>
+          </div>
+          <div id="trendChart" class="chart"></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <div>
+          <h2>4. 结构和 SKU 明细</h2>
+          <p>树图看金额结构，表格用于追到具体品类或 SKU。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="panel full-row">
+          <div class="panel-head">
+            <h2>各厂品类结构是否集中？</h2>
+            <span class="panel-note">面积代表含税金额贡献</span>
+          </div>
+          <div id="categoryTreemapGrid" class="treemap-row"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>SKU 收入主要来自哪里？</h2>
+            <span class="panel-note">按含税金额排序</span>
+          </div>
+          <div id="skuRankChart" class="chart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h2>品类明细表</h2>
+            <span class="panel-note">点击表头排序</span>
+          </div>
+          <div id="detailTable" class="table-wrap"></div>
+        </div>
       </div>
     </section>
   </div>
@@ -384,8 +413,11 @@
       ["副产品产值", " 元/kg"]
     ];
     const COLORS = ["#126c70", "#1258b8", "#b45309", "#047857", "#7c3aed", "#b42318", "#64748b"];
+    const TARGETS = { totalYield: 93, categoryYield: 20 };
     let report = null;
     let charts = {};
+    let activeFactory = "__all__";
+    let tableSort = { field: "amount", dir: "desc" };
 
     function num(value) {
       const n = Number(value);
@@ -398,9 +430,7 @@
       }
       return String(value);
     }
-    function pct(value) {
-      return fmt(num(value), "%");
-    }
+    function pct(value) { return fmt(num(value), "%"); }
     function escapeHtml(value) {
       return String(value ?? "").replace(/[&<>"']/g, s => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#039;" }[s]));
     }
@@ -409,19 +439,15 @@
       return charts[id];
     }
     function selectedFactory() {
-      const value = document.getElementById("factoryFilter").value;
-      if (value === "__all__") return null;
-      return report.factories.find(f => f.factory === value) || report.factories[0];
+      if (activeFactory === "__all__") return null;
+      return report.factories.find(f => f.factory === activeFactory) || report.factories[0];
     }
-    function visibleFactory() {
-      return selectedFactory() || report.factories[0];
+    function visibleFactories() {
+      return selectedFactory() ? [selectedFactory()] : (report.factories || []);
     }
-    function topN() {
-      return Number(document.getElementById("topFilter").value || 8);
-    }
-    function searchText() {
-      return document.getElementById("searchInput").value.trim().toLowerCase();
-    }
+    function visibleFactory() { return selectedFactory() || report.factories[0]; }
+    function topN() { return Number(document.getElementById("topFilter").value || 8); }
+    function searchText() { return document.getElementById("searchInput").value.trim().toLowerCase(); }
 
     async function loadReport() {
       const indexResponse = await fetch("./data/index.json", { cache: "no-store" });
@@ -437,29 +463,27 @@
       const url = dateValue === "latest" ? "./data/latest.json" : `./data/daily/${dateValue}.json`;
       const response = await fetch(url, { cache: "no-store" });
       report = await response.json();
+      if (!report.factories?.some(f => f.factory === activeFactory)) activeFactory = "__all__";
       setupControls();
       render();
     }
 
     function setupControls() {
-      const factoryFilter = document.getElementById("factoryFilter");
-      const currentFactory = factoryFilter.value;
-      factoryFilter.innerHTML = '<option value="__all__">全部工厂</option>' +
-        (report.factories || []).map(f => `<option value="${escapeHtml(f.factory)}">${escapeHtml(f.factory)}</option>`).join("");
-      if ([...factoryFilter.options].some(o => o.value === currentFactory)) factoryFilter.value = currentFactory;
-
       const metricFilter = document.getElementById("metricFilter");
       if (!metricFilter.innerHTML) {
         metricFilter.innerHTML = METRICS.map(([m]) => `<option value="${m}">${m}</option>`).join("");
         metricFilter.value = "总产成率";
       }
+      document.getElementById("dataMeta").textContent = `生成：${report.generated_at || "-"} · ${report.factory_count || 0} 个厂`;
     }
 
     function render() {
       if (!report || !report.report_date) {
-        document.querySelector(".wrap").innerHTML += '<div class="empty">还没有同步日报数据。</div>';
+        document.querySelector(".wrap").insertAdjacentHTML("beforeend", '<div class="empty">还没有同步日报数据。</div>');
         return;
       }
+      renderFactoryTabs();
+      renderAttentionCards();
       renderFactoryCards();
       renderFactoryMetricChart();
       renderVolumeSalesChart();
@@ -471,30 +495,111 @@
       renderCategoryPriceHeatmapChart();
       renderTrendChart();
       renderSkuRankChart();
+      renderDetailTable();
     }
 
-    function factoryYield(factory) {
-      return num((factory.daily_core || {})["总产成率"]);
+    function renderFactoryTabs() {
+      const tabs = [{ key: "__all__", label: "三厂对比" }, ...(report.factories || []).map(f => ({ key: f.factory, label: f.factory }))];
+      document.getElementById("factoryTabs").innerHTML = tabs.map(tab => `
+        <button class="tab-btn ${activeFactory === tab.key ? "active" : ""}" onclick="setFactoryTab('${escapeHtml(tab.key)}')">${escapeHtml(tab.label)}</button>
+      `).join("");
+    }
+    function setFactoryTab(factory) {
+      activeFactory = factory;
+      render();
+      Object.values(charts).forEach(chart => chart.resize());
     }
 
-    function factoryPrice(factory) {
-      return num((factory.daily_core || {})["总产值"]);
+    function factoryYield(factory) { return num((factory.daily_core || {})["总产成率"]); }
+    function factoryPrice(factory) { return num((factory.daily_core || {})["总产值"]); }
+    function mainYield(factory) { return num((factory.daily_core || {})["主产品产成率"]); }
+    function mainPrice(factory) { return num((factory.daily_core || {})["主产品产值"]); }
+
+    function allOverviewRows() {
+      return (report.factories || []).flatMap(factory => (factory.overview || []).map(row => ({
+        factory: factory.factory,
+        category: row["项目"],
+        yieldRate: num(row["产成率%"]),
+        price: num(row["含税单价"]),
+        amount: num(row["含税金额"]),
+        volume: num(row["产量(kg)"]),
+        saleRate: num(row["产销率"])
+      }))).filter(row => row.category);
+    }
+    function overviewRowsByFactory() {
+      const factories = visibleFactories();
+      return factories.flatMap(factory => (factory.overview || []).map(row => ({
+        factory: factory.factory,
+        category: row["项目"],
+        yieldRate: num(row["产成率%"]),
+        price: num(row["含税单价"]),
+        amount: num(row["含税金额"]),
+        volume: num(row["产量(kg)"]),
+        saleRate: num(row["产销率"])
+      }))).filter(row => row.price > 0 || row.yieldRate > 0);
+    }
+    function filteredOverview(factory) {
+      const q = searchText();
+      return (factory.overview || []).filter(r => !q || String(r["项目"] || "").toLowerCase().includes(q));
+    }
+
+    function renderAttentionCards() {
+      const factories = report.factories || [];
+      const rows = allOverviewRows();
+      const lowYieldFactory = factories.slice().sort((a, b) => factoryYield(a) - factoryYield(b))[0];
+      const highPriceFactory = factories.slice().sort((a, b) => factoryPrice(b) - factoryPrice(a))[0];
+      const lowPriceFactory = factories.slice().sort((a, b) => factoryPrice(a) - factoryPrice(b))[0];
+      const weakCategory = rows.slice().filter(r => r.yieldRate > 0).sort((a, b) => a.yieldRate - b.yieldRate)[0];
+      const topCategory = rows.slice().sort((a, b) => b.amount - a.amount)[0];
+      document.getElementById("attentionCards").innerHTML = [
+        {
+          type: "risk",
+          label: "产成率优先看",
+          value: `${lowYieldFactory?.factory || "-"} ${pct(factoryYield(lowYieldFactory || {}))}`,
+          detail: `目标参考 ${TARGETS.totalYield}%，低于目标的厂优先复盘品类结构。`
+        },
+        {
+          type: "price",
+          label: "总单价区间",
+          value: `${fmt(factoryPrice(lowPriceFactory || {}), " 元/kg")} - ${fmt(factoryPrice(highPriceFactory || {}), " 元/kg")}`,
+          detail: `${highPriceFactory?.factory || "-"} 当前最高，${lowPriceFactory?.factory || "-"} 当前最低。`
+        },
+        {
+          type: "risk",
+          label: "低产成率品类",
+          value: `${weakCategory?.factory || "-"} · ${weakCategory?.category || "-"}`,
+          detail: `产成率 ${pct(weakCategory?.yieldRate || 0)}，可进入品类明细确认产量和单价。`
+        },
+        {
+          type: "",
+          label: "金额贡献最大",
+          value: `${topCategory?.factory || "-"} · ${topCategory?.category || "-"}`,
+          detail: `含税金额 ${fmt(topCategory?.amount || 0, " 元")}，结构变化会影响总单价。`
+        }
+      ].map(card => `
+        <div class="attention-card ${card.type}">
+          <div class="label">${card.label}</div>
+          <div class="value">${escapeHtml(card.value)}</div>
+          <div class="detail">${escapeHtml(card.detail)}</div>
+        </div>
+      `).join("");
     }
 
     function renderFactoryCards() {
-      document.getElementById("factoryCards").innerHTML = (report.factories || []).map(factory => {
+      document.getElementById("factoryCards").innerHTML = visibleFactories().map(factory => {
         const c = factory.daily_core || {};
         return `
           <div class="factory-card">
             <div class="name">
               <span>${escapeHtml(factory.factory)}</span>
+              <span class="source">${escapeHtml(factory.source_file || "")}</span>
             </div>
             <div class="mini-grid">
               <div class="mini"><div class="label">总产成率</div><div class="value">${pct(c["总产成率"])}</div></div>
-              <div class="mini"><div class="label">主产品产成率</div><div class="value">${pct(c["主产品产成率"])}</div></div>
-              <div class="mini"><div class="label">副产品产成率</div><div class="value">${pct(c["副产品产成率"])}</div></div>
               <div class="mini"><div class="label">总单价</div><div class="value">${fmt(c["总产值"], " 元/kg")}</div></div>
+              <div class="mini"><div class="label">主产品产成率</div><div class="value">${pct(c["主产品产成率"])}</div></div>
               <div class="mini"><div class="label">主产品单价</div><div class="value">${fmt(c["主产品产值"], " 元/kg")}</div></div>
+              <div class="mini"><div class="label">副产品产成率</div><div class="value">${pct(c["副产品产成率"])}</div></div>
               <div class="mini"><div class="label">副产品单价</div><div class="value">${fmt(c["副产品产值"], " 元/kg")}</div></div>
             </div>
           </div>
@@ -505,12 +610,14 @@
     function renderFactoryMetricChart() {
       const metric = document.getElementById("metricFilter").value;
       const suffix = (METRICS.find(([m]) => m === metric) || ["", ""])[1];
-      const names = report.factories.map(f => f.factory);
-      const values = report.factories.map(f => num((f.daily_core || {})[metric]));
+      const factories = report.factories || [];
+      const names = factories.map(f => f.factory);
+      const values = factories.map(f => num((f.daily_core || {})[metric]));
+      const isYield = metric.includes("产成率");
       initChart("factoryMetricChart").setOption({
         color: [COLORS[0]],
         tooltip: { trigger: "axis", valueFormatter: v => fmt(v, suffix) },
-        grid: { left: 54, right: 20, top: 36, bottom: 42 },
+        grid: { left: 54, right: 20, top: 40, bottom: 42 },
         xAxis: { type: "category", data: names, axisTick: { show: false } },
         yAxis: { type: "value", axisLabel: { formatter: v => fmt(v) } },
         series: [{
@@ -518,13 +625,21 @@
           data: values,
           barMaxWidth: 46,
           label: { show: true, position: "top", formatter: p => fmt(p.value, suffix) },
+          markLine: isYield ? {
+            symbol: "none",
+            lineStyle: { color: COLORS[5], type: "dashed" },
+            label: { formatter: `目标 ${TARGETS.totalYield}%` },
+            data: [{ yAxis: TARGETS.totalYield }]
+          } : undefined,
           itemStyle: { borderRadius: [6, 6, 0, 0] }
         }]
       }, true);
     }
 
     function renderVolumeSalesChart() {
-      const names = report.factories.map(f => f.factory);
+      const factories = report.factories || [];
+      const names = factories.map(f => f.factory);
+      const avgPrice = factories.reduce((sum, f) => sum + factoryPrice(f), 0) / Math.max(factories.length, 1);
       initChart("volumeSalesChart").setOption({
         color: [COLORS[1], COLORS[2]],
         tooltip: { trigger: "axis" },
@@ -536,15 +651,36 @@
           { type: "value", name: "单价", axisLabel: { formatter: "{value}" }, scale: true }
         ],
         series: [
-          { name: "总产成率", type: "bar", data: report.factories.map(f => factoryYield(f)), itemStyle: { borderRadius: [6,6,0,0] }, label: { show: true, position: "top", formatter: p => pct(p.value) } },
-          { name: "总单价", type: "line", yAxisIndex: 1, smooth: true, symbolSize: 8, data: report.factories.map(f => factoryPrice(f)), label: { show: true, position: "top", formatter: p => fmt(p.value, " 元/kg") } }
+          {
+            name: "总产成率",
+            type: "bar",
+            data: factories.map(f => factoryYield(f)),
+            itemStyle: { borderRadius: [6,6,0,0] },
+            label: { show: true, position: "top", formatter: p => pct(p.value) },
+            markLine: {
+              symbol: "none",
+              lineStyle: { color: COLORS[5], type: "dashed" },
+              label: { formatter: `目标 ${TARGETS.totalYield}%` },
+              data: [{ yAxis: TARGETS.totalYield }]
+            }
+          },
+          {
+            name: "总单价",
+            type: "line",
+            yAxisIndex: 1,
+            smooth: true,
+            symbolSize: 8,
+            data: factories.map(f => factoryPrice(f)),
+            label: { show: true, position: "top", formatter: p => fmt(p.value, " 元/kg") },
+            markLine: {
+              symbol: "none",
+              lineStyle: { color: COLORS[2], type: "dotted" },
+              label: { formatter: `均值 ${fmt(avgPrice)}` },
+              data: [{ yAxis: avgPrice }]
+            }
+          }
         ]
       }, true);
-    }
-
-    function filteredOverview(factory) {
-      const q = searchText();
-      return (factory.overview || []).filter(r => !q || String(r["项目"] || "").toLowerCase().includes(q));
     }
 
     function renderCategoryAmountChart() {
@@ -572,12 +708,18 @@
         color: [COLORS[2]],
         tooltip: { trigger: "axis", valueFormatter: v => pct(v) },
         grid: { left: 92, right: 42, top: 24, bottom: 30 },
-        xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, max: 100 },
+        xAxis: { type: "value", axisLabel: { formatter: "{value}%" }, max: Math.max(35, ...rows.map(r => num(r["产成率%"]))), min: 0 },
         yAxis: { type: "category", data: rows.map(r => r["项目"]), axisTick: { show: false } },
         series: [{
           type: "bar",
           data: rows.map(r => num(r["产成率%"])),
           label: { show: true, position: "right", formatter: p => pct(p.value) },
+          markLine: {
+            symbol: "none",
+            lineStyle: { color: COLORS[5], type: "dashed" },
+            label: { formatter: `参考 ${TARGETS.categoryYield}%` },
+            data: [{ xAxis: TARGETS.categoryYield }]
+          },
           itemStyle: { borderRadius: [0, 6, 6, 0] }
         }]
       }, true);
@@ -591,21 +733,14 @@
       const next = sorted[base + 1];
       return next === undefined ? sorted[base] : sorted[base] + rest * (next - sorted[base]);
     }
-
     function boxData(values) {
       const sorted = values.map(num).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
       if (!sorted.length) return [0, 0, 0, 0, 0];
-      return [
-        sorted[0],
-        quantile(sorted, 0.25),
-        quantile(sorted, 0.5),
-        quantile(sorted, 0.75),
-        sorted[sorted.length - 1]
-      ];
+      return [sorted[0], quantile(sorted, 0.25), quantile(sorted, 0.5), quantile(sorted, 0.75), sorted[sorted.length - 1]];
     }
 
     function renderPriceBoxplotChart() {
-      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
+      const factories = visibleFactories();
       const names = factories.map(f => f.factory);
       const data = factories.map(factory => boxData((factory.overview || []).map(row => row["含税单价"])));
       initChart("priceBoxplotChart").setOption({
@@ -620,25 +755,8 @@
         grid: { left: 54, right: 26, top: 32, bottom: 42 },
         xAxis: { type: "category", data: names, axisTick: { show: false } },
         yAxis: { type: "value", name: "元/kg", scale: true },
-        series: [{
-          name: "品类含税单价",
-          type: "boxplot",
-          data,
-          itemStyle: { borderColor: COLORS[0] }
-        }]
+        series: [{ name: "品类含税单价", type: "boxplot", data, itemStyle: { borderColor: COLORS[0] } }]
       }, true);
-    }
-
-    function overviewRowsByFactory() {
-      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
-      return factories.flatMap(factory => (factory.overview || []).map(row => ({
-        factory: factory.factory,
-        category: row["项目"],
-        yieldRate: num(row["产成率%"]),
-        price: num(row["含税单价"]),
-        amount: num(row["含税金额"]),
-        volume: num(row["产量(kg)"])
-      }))).filter(row => row.price > 0 || row.yieldRate > 0);
     }
 
     function renderYieldPriceScatterChart() {
@@ -655,22 +773,31 @@
         },
         legend: { top: 4, type: "scroll" },
         grid: { left: 54, right: 28, top: 54, bottom: 42 },
-        xAxis: { type: "value", name: "产成率", axisLabel: { formatter: "{value}%" }, min: 0 },
+        xAxis: {
+          type: "value",
+          name: "产成率",
+          axisLabel: { formatter: "{value}%" },
+          min: 0,
+          splitLine: { lineStyle: { color: "#edf2f7" } }
+        },
         yAxis: { type: "value", name: "元/kg", scale: true },
         series: factories.map(factory => ({
           name: factory,
           type: "scatter",
           symbolSize: value => Math.max(8, Math.min(34, Math.sqrt(Math.abs(value[2] || 0)) / 35)),
-          data: rows.filter(row => row.factory === factory).map(row => ({
-            value: [row.yieldRate, row.price, row.amount],
-            raw: row
-          }))
+          data: rows.filter(row => row.factory === factory).map(row => ({ value: [row.yieldRate, row.price, row.amount], raw: row })),
+          markLine: {
+            symbol: "none",
+            lineStyle: { color: COLORS[5], type: "dashed" },
+            label: { formatter: `参考 ${TARGETS.categoryYield}%` },
+            data: [{ xAxis: TARGETS.categoryYield }]
+          }
         }))
       }, true);
     }
 
     function renderCategoryTreemapChart() {
-      const factories = selectedFactory() ? [selectedFactory()] : (report.factories || []);
+      const factories = visibleFactories();
       const grid = document.getElementById("categoryTreemapGrid");
       const activeIds = new Set();
       grid.innerHTML = factories.map((factory, idx) => {
@@ -678,43 +805,27 @@
         activeIds.add(id);
         return `<div class="treemap-card"><h3>${escapeHtml(factory.factory)}</h3><div id="${id}" class="tree-chart"></div></div>`;
       }).join("");
-
-      Object.keys(charts)
-        .filter(id => id.startsWith("categoryTreemapChart") && !activeIds.has(id))
-        .forEach(id => {
-          charts[id].dispose();
-          delete charts[id];
-        });
-
+      Object.keys(charts).filter(id => id.startsWith("categoryTreemapChart") && !activeIds.has(id)).forEach(id => {
+        charts[id].dispose();
+        delete charts[id];
+      });
       factories.forEach((factory, idx) => {
         const id = `categoryTreemapChart${idx}`;
         const rows = ((factory.sku || {}).by_category || [])
           .filter(row => num(row["含税金额"]) > 0)
           .slice(0, 18)
-          .map(row => ({
-            name: row["部位大类"],
-            value: num(row["含税金额"]),
-            itemStyle: { borderColor: "#fff" }
-          }));
+          .map(row => ({ name: row["部位大类"], value: num(row["含税金额"]), itemStyle: { borderColor: "#fff" } }));
         initChart(id).setOption({
           color: COLORS,
-          tooltip: {
-            formatter: info => `${factory.factory}<br>${info.name}<br>含税金额：${fmt(num(info.value), " 元")}`
-          },
+          tooltip: { formatter: info => `${factory.factory}<br>${info.name}<br>含税金额：${fmt(num(info.value), " 元")}` },
           series: [{
             type: "treemap",
             roam: false,
             nodeClick: false,
             breadcrumb: { show: false },
             data: rows,
-            label: {
-              show: true,
-              formatter: "{b}",
-              fontSize: 13
-            },
-            levels: [
-              { itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 } }
-            ]
+            label: { show: true, formatter: "{b}", fontSize: 13 },
+            levels: [{ itemStyle: { borderColor: "#fff", borderWidth: 3, gapWidth: 3 } }]
           }]
         }, true);
       });
@@ -722,12 +833,7 @@
 
     function heatColor(value, min, max) {
       const ratio = max === min ? 1 : Math.max(0, Math.min(1, (value - min) / (max - min)));
-      const stops = [
-        [0, "#dff3f6"],
-        [0.35, "#7cc7d4"],
-        [0.7, "#2385a8"],
-        [1, "#073b63"]
-      ];
+      const stops = [[0, "#dff3f6"], [0.35, "#7cc7d4"], [0.7, "#2385a8"], [1, "#073b63"]];
       const upper = stops.findIndex(stop => ratio <= stop[0]);
       const end = stops[Math.max(upper, 1)];
       const start = stops[Math.max(upper - 1, 0)];
@@ -743,25 +849,16 @@
       const rows = overviewRowsByFactory().filter(row => row.price > 0);
       const factories = [...new Set(rows.map(row => row.factory))];
       const categories = [...new Set(rows.map(row => row.category))].slice(0, topN());
-      const visibleRows = rows
-        .filter(row => categories.includes(row.category))
-        .filter(row => factories.includes(row.factory));
+      const visibleRows = rows.filter(row => categories.includes(row.category)).filter(row => factories.includes(row.factory));
       const prices = visibleRows.map(row => row.price);
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
       const values = visibleRows.map(row => ({
         value: [categories.indexOf(row.category), factories.indexOf(row.factory), row.price],
         raw: row,
-        itemStyle: {
-          color: heatColor(row.price, minPrice, maxPrice),
-          borderColor: "#ffffff",
-          borderWidth: 2
-        },
-        label: {
-          color: row.price > minPrice + (maxPrice - minPrice) * 0.62 ? "#ffffff" : "#0f172a"
-        }
+        itemStyle: { color: heatColor(row.price, minPrice, maxPrice), borderColor: "#ffffff", borderWidth: 2 },
+        label: { color: row.price > minPrice + (maxPrice - minPrice) * 0.62 ? "#ffffff" : "#0f172a" }
       }));
-
       initChart("categoryPriceHeatmapChart").setOption({
         tooltip: {
           position: "top",
@@ -801,19 +898,8 @@
         series: [{
           type: "heatmap",
           data: values,
-          label: {
-            show: true,
-            formatter: p => fmt(p.data.value[2]),
-            fontWeight: 700
-          },
-          emphasis: {
-            itemStyle: {
-              borderColor: "#0f172a",
-              borderWidth: 2,
-              shadowBlur: 12,
-              shadowColor: "rgba(15,23,42,.22)"
-            }
-          }
+          label: { show: true, formatter: p => fmt(p.data.value[2]), fontWeight: 700 },
+          emphasis: { itemStyle: { borderColor: "#0f172a", borderWidth: 2, shadowBlur: 12, shadowColor: "rgba(15,23,42,.22)" } }
         }]
       }, true);
     }
@@ -821,7 +907,6 @@
     function priceTrendBlock(factory) {
       return ((factory.trend || {}).blocks || []).find(b => String(b.metric || "").includes("含税单价"));
     }
-
     function renderTrendChart() {
       const factory = visibleFactory();
       const block = priceTrendBlock(factory);
@@ -872,14 +957,45 @@
       }, true);
     }
 
+    function renderDetailTable() {
+      const q = searchText();
+      const rows = overviewRowsByFactory()
+        .filter(row => !q || [row.factory, row.category].some(v => String(v || "").toLowerCase().includes(q)))
+        .sort((a, b) => {
+          const av = a[tableSort.field];
+          const bv = b[tableSort.field];
+          const result = typeof av === "number" && typeof bv === "number" ? av - bv : String(av).localeCompare(String(bv), "zh-CN");
+          return tableSort.dir === "asc" ? result : -result;
+        });
+      const columns = [
+        ["factory", "工厂", v => v],
+        ["category", "品类", v => v],
+        ["yieldRate", "产成率", v => pct(v)],
+        ["price", "含税单价", v => fmt(v, " 元/kg")],
+        ["amount", "含税金额", v => fmt(v, " 元")],
+        ["volume", "产量", v => fmt(v, " kg")],
+        ["saleRate", "产销率", v => pct(v)]
+      ];
+      document.getElementById("detailTable").innerHTML = `
+        <table>
+          <thead><tr>${columns.map(([field, label]) => `<th onclick="sortDetailTable('${field}')">${label}${tableSort.field === field ? (tableSort.dir === "asc" ? " ↑" : " ↓") : ""}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map(row => `<tr>${columns.map(([field, , formatter]) => `<td>${escapeHtml(formatter(row[field]))}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
+      `;
+    }
+    function sortDetailTable(field) {
+      if (tableSort.field === field) tableSort.dir = tableSort.dir === "asc" ? "desc" : "asc";
+      else tableSort = { field, dir: "desc" };
+      renderDetailTable();
+    }
+
     function resetFilters() {
-      document.getElementById("factoryFilter").value = "__all__";
+      activeFactory = "__all__";
       document.getElementById("metricFilter").value = "总产成率";
       document.getElementById("topFilter").value = "8";
       document.getElementById("searchInput").value = "";
       render();
     }
-
     function downloadChart() {
       const chart = charts.factoryMetricChart;
       if (!chart) return;
@@ -889,17 +1005,12 @@
       link.click();
     }
 
-    ["factoryFilter", "metricFilter", "topFilter", "searchInput"].forEach(id => {
-      document.addEventListener("input", event => {
-        if (event.target && event.target.id === id) render();
-      });
-      document.addEventListener("change", event => {
-        if (event.target && event.target.id === id) render();
-      });
+    ["metricFilter", "topFilter", "searchInput"].forEach(id => {
+      document.addEventListener("input", event => { if (event.target && event.target.id === id) render(); });
+      document.addEventListener("change", event => { if (event.target && event.target.id === id) render(); });
     });
     document.getElementById("dateFilter").addEventListener("change", event => loadDate(event.target.value));
     window.addEventListener("resize", () => Object.values(charts).forEach(chart => chart.resize()));
-
     loadReport().catch(error => {
       document.querySelector(".wrap").insertAdjacentHTML("beforeend", `<div class="empty">无法读取数据：${escapeHtml(error.message)}</div>`);
     });
