@@ -1,6 +1,6 @@
 # PVM 肉品产值分析报表
 
-这是一个 GitHub Pages 静态看板，用于展示三厂每日 Excel 报表分析结果。项目结构参考 Observable Framework 的思路：数据处理和网页展示分离，网页只读取标准 JSON 数据。
+这是一个 GitHub Pages 静态看板，用于展示三厂每日 Excel 报表分析结果。项目采用数据处理和网页展示分离的结构，网页只读取标准 JSON 数据。
 
 ## 每日流程
 
