@@ -735,40 +735,100 @@
       });
     }
 
+    function heatColor(value, min, max) {
+      const ratio = max === min ? 1 : Math.max(0, Math.min(1, (value - min) / (max - min)));
+      const stops = [
+        [0, "#dff3f6"],
+        [0.35, "#7cc7d4"],
+        [0.7, "#2385a8"],
+        [1, "#073b63"]
+      ];
+      const upper = stops.findIndex(stop => ratio <= stop[0]);
+      const end = stops[Math.max(upper, 1)];
+      const start = stops[Math.max(upper - 1, 0)];
+      const local = end[0] === start[0] ? 0 : (ratio - start[0]) / (end[0] - start[0]);
+      const toRgb = hex => hex.match(/\w\w/g).map(part => parseInt(part, 16));
+      const [r1, g1, b1] = toRgb(start[1]);
+      const [r2, g2, b2] = toRgb(end[1]);
+      const rgb = [r1, g1, b1].map((channel, i) => Math.round(channel + ([r2, g2, b2][i] - channel) * local));
+      return `rgb(${rgb.join(",")})`;
+    }
+
     function renderCategoryPriceHeatmapChart() {
       const rows = overviewRowsByFactory().filter(row => row.price > 0);
       const factories = [...new Set(rows.map(row => row.factory))];
       const categories = [...new Set(rows.map(row => row.category))].slice(0, topN());
-      const values = rows
+      const visibleRows = rows
         .filter(row => categories.includes(row.category))
-        .map(row => [categories.indexOf(row.category), factories.indexOf(row.factory), row.price, row]);
-      const maxPrice = Math.max(...values.map(v => v[2]), 1);
+        .filter(row => factories.includes(row.factory));
+      const prices = visibleRows.map(row => row.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      const values = visibleRows.map(row => ({
+        value: [categories.indexOf(row.category), factories.indexOf(row.factory), row.price],
+        raw: row,
+        itemStyle: {
+          color: heatColor(row.price, minPrice, maxPrice),
+          borderColor: "#ffffff",
+          borderWidth: 2
+        },
+        label: {
+          color: row.price > minPrice + (maxPrice - minPrice) * 0.62 ? "#ffffff" : "#0f172a"
+        }
+      }));
 
       initChart("categoryPriceHeatmapChart").setOption({
         tooltip: {
           position: "top",
           formatter: p => {
-            const row = p.data[3];
+            const row = p.data.raw;
             return `${row.factory} · ${row.category}<br>含税单价：${fmt(row.price, " 元/kg")}<br>产成率：${pct(row.yieldRate)}`;
           }
         },
-        grid: { left: 84, right: 28, top: 44, bottom: 86 },
-        xAxis: { type: "category", data: categories, axisLabel: { rotate: 35 } },
-        yAxis: { type: "category", data: factories },
+        grid: { left: 84, right: 28, top: 44, bottom: 88 },
+        xAxis: {
+          type: "category",
+          data: categories,
+          axisTick: { show: false },
+          axisLine: { lineStyle: { color: "#94a3b8" } },
+          axisLabel: { rotate: 35, color: "#475569" },
+          splitArea: { show: true, areaStyle: { color: ["#f8fafc", "#ffffff"] } }
+        },
+        yAxis: {
+          type: "category",
+          data: factories,
+          axisTick: { show: false },
+          axisLine: { lineStyle: { color: "#94a3b8" } },
+          axisLabel: { color: "#475569", fontWeight: 700 }
+        },
         visualMap: {
-          min: 0,
+          min: minPrice,
           max: maxPrice,
+          dimension: 2,
           calculable: true,
           orient: "horizontal",
           left: "center",
           bottom: 0,
-          inRange: { color: ["#e7f4f1", "#70b7ad", "#126c70"] }
+          text: ["高", "低"],
+          textStyle: { color: "#475569" },
+          inRange: { color: ["#dff3f6", "#7cc7d4", "#2385a8", "#073b63"] }
         },
         series: [{
           type: "heatmap",
           data: values,
-          label: { show: true, formatter: p => fmt(p.data[2]) },
-          emphasis: { itemStyle: { shadowBlur: 10, shadowColor: "rgba(0,0,0,.18)" } }
+          label: {
+            show: true,
+            formatter: p => fmt(p.data.value[2]),
+            fontWeight: 700
+          },
+          emphasis: {
+            itemStyle: {
+              borderColor: "#0f172a",
+              borderWidth: 2,
+              shadowBlur: 12,
+              shadowColor: "rgba(15,23,42,.22)"
+            }
+          }
         }]
       }, true);
     }
