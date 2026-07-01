@@ -1,5 +1,7 @@
 {
   "schema_version": 1,
-  "latest_date": null,
-  "dates": []
+  "latest_date": "2026-07-01",
+  "dates": [
+    "2026-07-01"
+  ]
 }
