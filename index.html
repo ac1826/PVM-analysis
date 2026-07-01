@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PVM 三厂每日分析看板</title>
+  <style>
+    :root {
+      font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+      color: #102033;
+      background: #f3f7fb;
+      --line: #dbe5f0;
+      --panel: #ffffff;
+      --muted: #63758c;
+      --brand: #1258b8;
+      --ok: #00866f;
+      --warn: #bb7a16;
+      --danger: #b63e36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(90deg, rgba(18, 88, 184, .06) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(18, 88, 184, .05) 1px, transparent 1px),
+        linear-gradient(135deg, #f9fbff 0%, #eef4fa 52%, #e7f0f8 100%);
+      background-size: 42px 42px, 42px 42px, auto;
+    }
+    main {
+      width: min(1240px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      letter-spacing: 0;
+    }
+    .sub {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .badge {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.82);
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: #39516e;
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 14px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 16px 42px rgba(16, 38, 67, .08);
+      padding: 16px;
+    }
+    .span-12 { grid-column: span 12; }
+    .span-6 { grid-column: span 6; }
+    .span-4 { grid-column: span 4; }
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .metric {
+      border: 1px solid #e1e9f2;
+      background: #f9fbfe;
+      border-radius: 8px;
+      padding: 12px;
+      min-height: 82px;
+    }
+    .metric .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .metric .value {
+      font-size: 21px;
+      font-weight: 800;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      border-bottom: 1px solid #e6edf5;
+      padding: 9px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #40556f;
+      background: #f6f9fc;
+      font-weight: 700;
+    }
+    .factory-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .factory-title strong { font-size: 20px; }
+    .warn {
+      color: var(--warn);
+      background: #fff8e8;
+      border: 1px solid #f0d9a9;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 8px 0;
+    }
+    .empty {
+      color: var(--muted);
+      border: 1px dashed #b9c7d8;
+      border-radius: 8px;
+      padding: 24px;
+      background: rgba(255,255,255,.75);
+    }
+    @media (max-width: 900px) {
+      header { align-items: start; flex-direction: column; }
+      .span-6, .span-4 { grid-column: span 12; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>PVM 三厂每日分析看板</h1>
+        <div class="sub">读取 GitHub Pages 仓库中的 data/latest.json，展示最新同步日报。</div>
+      </div>
+      <div class="badge" id="status">正在读取数据</div>
+    </header>
+
+    <section class="grid" id="app"></section>
+  </main>
+
+  <script>
+    const metricFields = [
+      ["总产成率", "%"],
+      ["总产值", " 元/kg"],
+      ["屠宰加工产量", " 吨"],
+      ["销量", " 吨"],
+      ["产销率", "%"],
+      ["均重", " kg/只"]
+    ];
+
+    function fmt(value, suffix = "") {
+      if (value === null || value === undefined || value === "") return "-";
+      if (typeof value === "number") return value.toLocaleString("zh-CN", { maximumFractionDigits: 2 }) + suffix;
+      return String(value);
+    }
+
+    function table(rows, columns) {
+      if (!rows || !rows.length) return '<div class="empty">暂无数据</div>';
+      return `<table><thead><tr>${columns.map(c => `<th>${c}</th>`).join("")}</tr></thead><tbody>` +
+        rows.map(row => `<tr>${columns.map(c => `<td>${fmt(row[c])}</td>`).join("")}</tr>`).join("") +
+        `</tbody></table>`;
+    }
+
+    function render(report) {
+      const app = document.getElementById("app");
+      if (!report || !report.report_date) {
+        app.innerHTML = '<div class="panel span-12 empty">还没有同步日报数据。请先在本地上传分析工具中上传三厂 Excel 并同步到 GitHub。</div>';
+        document.getElementById("status").textContent = "等待首次同步";
+        return;
+      }
+
+      document.getElementById("status").textContent = `${report.report_date} · ${report.factory_count || 0} 个厂`;
+      const warnings = (report.warnings || []).map(w => `<div class="warn">${w}</div>`).join("");
+      const factoryCards = (report.factories || []).map(factory => {
+        const core = factory.daily_core || {};
+        const metrics = metricFields.map(([key, suffix]) => `
+          <div class="metric">
+            <div class="label">${key}</div>
+            <div class="value">${fmt(core[key], suffix)}</div>
+          </div>
+        `).join("");
+        const overview = table(factory.overview || [], ["项目", "产量(kg)", "销量(kg)", "产成率%", "含税金额", "含税单价", "产销率"]);
+        return `
+          <article class="panel span-12">
+            <div class="factory-title">
+              <strong>${factory.factory}</strong>
+              <span>${factory.daily_label || report.report_date}</span>
+            </div>
+            <div class="metrics">${metrics}</div>
+            <h2 style="margin-top:18px;">当日总览</h2>
+            ${overview}
+          </article>
+        `;
+      }).join("");
+
+      app.innerHTML = `
+        <section class="panel span-12">
+          <h2>同步状态</h2>
+          <div>生成时间：${fmt(report.generated_at)} · 数据日期：${fmt(report.report_date)}</div>
+          ${warnings || '<div class="sub">暂无异常提醒</div>'}
+        </section>
+        ${factoryCards}
+      `;
+    }
+
+    fetch("./data/latest.json", { cache: "no-store" })
+      .then(response => response.json())
+      .then(render)
+      .catch(error => {
+        document.getElementById("status").textContent = "读取失败";
+        document.getElementById("app").innerHTML = `<div class="panel span-12 empty">无法读取 data/latest.json：${error.message}</div>`;
+      });
+  </script>
+</body>
+</html>
