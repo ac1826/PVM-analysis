@@ -291,28 +291,24 @@ def main() -> None:
         st.error("没有找到 data/index.json。请先同步日报数据到仓库。")
         return
 
-    dates = index.get("dates", [])
-    if not dates:
+    latest_date = index.get("latest_date")
+    if not latest_date:
         st.warning("暂无日报日期。")
         return
 
-    top_cols = st.columns([1, 1, 1.4])
-    with top_cols[0]:
-        date_value = st.selectbox("数据日期", dates, index=0)
-    report = load_report(date_value)
+    top_cols = st.columns([1, 1.4])
+    report = load_report("latest")
     factories = report.get("factories", [])
     factory_labels = ["三厂对比", *[f.get("factory", "-") for f in factories]]
-    with top_cols[1]:
+    with top_cols[0]:
         factory_label = st.selectbox("查看范围", factory_labels, index=0)
-    with top_cols[2]:
+    with top_cols[1]:
         query = st.text_input("聚焦品类/SKU", placeholder="腿类、胸类、物料描述...")
 
-    top_n = st.slider("显示 Top 数", min_value=5, max_value=20, value=8, step=1)
+    top_n = 8
     selected_factories = factories if factory_label == "三厂对比" else [f for f in factories if f.get("factory") == factory_label]
     if not selected_factories:
         selected_factories = factories
-
-    st.caption(f"数据日期：{report.get('report_date')} · 生成时间：{report.get('generated_at')} · 当前 {len(selected_factories)} 个厂")
 
     st.markdown("## 今日重点")
     build_focus_cards(report)
