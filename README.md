@@ -31,8 +31,22 @@
 ## 页面文件
 
 - `index.html`：GitHub Pages 看板模板。
+- `streamlit_app.py`：Streamlit Cloud 入口文件。
+- `requirements.txt`：Streamlit Cloud 依赖文件。
 - `data/`：日报数据。
 - `.nojekyll`：让 GitHub Pages 直接按静态文件发布。
+
+## Streamlit Cloud 部署
+
+在 Streamlit Cloud 的 Deploy an app 页面填写：
+
+```text
+Repository: ac1826/PVM-analysis
+Branch: main
+Main file path: streamlit_app.py
+```
+
+部署后，Streamlit 会读取仓库中的 `data/index.json`、`data/latest.json` 和 `data/daily/*.json` 展示同一份日报数据。
 
 ## 本地上传分析工具
 
